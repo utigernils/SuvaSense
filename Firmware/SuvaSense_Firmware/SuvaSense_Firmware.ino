@@ -1,10 +1,12 @@
 #include "MPU6050Sensor.h"
 #include "VEML7700Sensor.h"
 #include "BME680Sensor.h"
+#include "ESP32SystemSensor.h"
 
 MPU6050Sensor mpu;
 VEML7700Sensor veml;
 BME680Sensor bme;
+ESP32SystemSensor sys;
 
 void setup() {
   Serial.begin(115200);
@@ -28,6 +30,13 @@ void setup() {
     Serial.println("BME680 init failed!");
   } else {
     Serial.println("BME680 ready.");
+  }
+
+  Serial.println("Initializing ESP32 System...");
+  if (!sys.begin()) {
+    Serial.println("ESP32 System init failed!");
+  } else {
+    Serial.println("ESP32 System ready.");
   }
 
   Serial.println("=== Setup complete ===");
@@ -81,6 +90,45 @@ void loop() {
   Serial.print("  Altitude: ");
   Serial.print(bmeData.altitude);
   Serial.println(" m");
+
+  ESP32SystemData sysData = sys.read();
+
+  Serial.println("--- ESP32 System ---");
+  Serial.print("  Uptime: ");
+  Serial.print(sysData.uptimeSec);
+  Serial.println(" s");
+  Serial.print("  CPU Temp: ");
+  Serial.print(sysData.cpuTempC);
+  Serial.println(" C");
+  Serial.print("  Free Heap: ");
+  Serial.print(sysData.freeHeap);
+  Serial.println(" bytes");
+  Serial.print("  Free Sketch Space: ");
+  Serial.print(sysData.freeSketchSpace);
+  Serial.println(" bytes");
+  Serial.print("  CPU Freq: ");
+  Serial.print(sysData.cpuFreqMHz);
+  Serial.println(" MHz");
+  Serial.print("  MAC: ");
+  Serial.println(sysData.macAddress);
+  Serial.print("  Chip Model: ");
+  Serial.println(sysData.chipModel);
+  Serial.print("  Chip Revision: ");
+  Serial.println(sysData.chipRevision);
+  Serial.print("  Flash Size: ");
+  Serial.print(sysData.flashSize);
+  Serial.println(" bytes");
+  Serial.print("  Flash Speed: ");
+  Serial.print(sysData.flashSpeed);
+  Serial.println(" Hz");
+  Serial.print("  Heap Size: ");
+  Serial.print(sysData.heapSize);
+  Serial.println(" bytes");
+  Serial.print("  Min Free Heap: ");
+  Serial.print(sysData.minFreeHeap);
+  Serial.println(" bytes");
+  Serial.print("  Reset Reason: ");
+  Serial.println(sysData.resetReason);
 
   Serial.println("========================");
   delay(1000);
