@@ -1,6 +1,7 @@
 #include "sys_factory.h"
 #include "hal_LED.h"
 #include "sys_storage_system.h"
+#include "sys_serial.h"
 #include <Arduino.h>
 
 extern LEDController leds;
@@ -9,8 +10,7 @@ static bool _done = false;
 
 void Factory::setup() {
   leds.setSystemColor(SystemColor::FACTORY);
-  Serial.println("=== FACTORY MODE ===");
-  Serial.println("Enter serial number followed by newline...");
+  SerialJSON::sendInfo("Factory mode - enter serial number via JSON or raw text");
   _done = false;
 }
 
@@ -28,9 +28,7 @@ void Factory::loop() {
         StorageSystem::setSerialNumber(input);
         StorageSystem::setFactoryDone(true);
 
-        Serial.print("Serial number '");
-        Serial.print(input);
-        Serial.println("' stored. Rebooting...");
+        SerialJSON::sendInfo("Serial number stored. Rebooting...");
         _done = true;
         delay(1000);
         ESP.restart();

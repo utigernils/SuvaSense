@@ -3,6 +3,7 @@
 #include "sys_bootloader.h"
 #include "sys_runtime.h"
 #include "sys_storage_system.h"
+#include "sys_serial.h"
 
 static const char* BOOTLOADER_KEY = "bootloader";
 
@@ -17,7 +18,7 @@ DeviceState StateHandler::boot() {
     return DeviceState::FACTORY;
   }
 
-  Serial.println("Waiting 5s for bootloader key...");
+  SerialJSON::sendInfo("Waiting 5s for bootloader trigger...");
   unsigned long start = millis();
   String input = "";
   bool bootloaderTriggered = false;
