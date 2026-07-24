@@ -1,6 +1,9 @@
 #include "sys_factory.h"
+#include "hal_LED.h"
 #include <Arduino.h>
 #include <Preferences.h>
+
+extern LEDController leds;
 
 static const char* PREFS_NAMESPACE = "suva";
 static const char* KEY_FACTORY_DONE = "factory_done";
@@ -9,6 +12,7 @@ static const char* KEY_SERIAL_NUM = "serial_num";
 static bool _done = false;
 
 void Factory::setup() {
+  leds.setSystemColor(SystemColor::FACTORY);
   Serial.println("=== FACTORY MODE ===");
   Serial.println("Enter serial number followed by newline...");
   _done = false;
