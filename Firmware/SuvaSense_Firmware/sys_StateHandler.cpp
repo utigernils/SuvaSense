@@ -2,6 +2,7 @@
 #include "sys_factory.h"
 #include "sys_bootloader.h"
 #include "sys_runtime.h"
+#include "sys_storage_system.h"
 
 static const char* PREFS_NAMESPACE = "suva";
 static const char* KEY_FACTORY_DONE = "factory_done";
@@ -13,6 +14,8 @@ StateHandler::StateHandler() {
 }
 
 DeviceState StateHandler::boot() {
+  StorageSystem::incrementBootCount();
+
   if (_isFirstBoot()) {
     _enterFactory();
     return DeviceState::FACTORY;
