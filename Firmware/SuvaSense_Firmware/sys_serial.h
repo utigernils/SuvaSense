@@ -14,6 +14,8 @@ namespace SerialJSON {
 
   void sendResponse(const String& action, const String& target, const String& value, bool ok);
 
+  void sendPong();
+
   void sendLog(const String& level, const String& message);
   void sendInfo(const String& message);
   void sendWarn(const String& message);

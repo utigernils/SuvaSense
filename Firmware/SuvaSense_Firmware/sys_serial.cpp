@@ -17,6 +17,13 @@ void SerialJSON::sendResponse(const String& action, const String& target, const 
   Serial.println();
 }
 
+void SerialJSON::sendPong() {
+  StaticJsonDocument<64> doc;
+  doc["type"] = "pong";
+  serializeJson(doc, Serial);
+  Serial.println();
+}
+
 void SerialJSON::sendLog(const String& level, const String& message) {
   StaticJsonDocument<JSON_BUFFER> doc;
   doc["type"] = "log";

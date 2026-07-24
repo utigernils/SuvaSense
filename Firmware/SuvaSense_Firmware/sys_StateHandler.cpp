@@ -5,8 +5,6 @@
 #include "sys_storage_system.h"
 #include "sys_serial.h"
 
-static const char* BOOTLOADER_KEY = "bootloader";
-
 StateHandler::StateHandler() {
 }
 
@@ -20,23 +18,17 @@ DeviceState StateHandler::boot() {
 
   SerialJSON::sendInfo("Waiting 5s for bootloader trigger...");
   unsigned long start = millis();
-  String input = "";
   bool bootloaderTriggered = false;
 
   while (millis() - start < 5000) {
-    while (Serial.available()) {
-      char c = Serial.read();
-      if (c == '\n' || c == '\r') {
-        if (input.equals(BOOTLOADER_KEY)) {
-          bootloaderTriggered = true;
-        }
-        input = "";
-      } else {
-        input += c;
-      }
+    SerialJSON::Command cmd = SerialJSON::readCommand();
+    if (cmd.valid && cmd.action == "bootloader") {
+      bootloaderTriggered = true;
+      break;
     }
-    if (bootloaderTriggered) break;
-    delay(10);
+    if (!cmd.valid && cmd.action.length() == 0) {
+      delay(10);
+    }
   }
 
   if (bootloaderTriggered) {

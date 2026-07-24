@@ -2,7 +2,6 @@
 #include "hal_LED.h"
 #include "sys_serial.h"
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
 extern LEDController leds;
 
@@ -22,10 +21,7 @@ void Runtime::loop() {
   if (!cmd.valid) return;
 
   if (cmd.action == "ping") {
-    StaticJsonDocument<128> doc;
-    doc["type"] = "pong";
-    serializeJson(doc, Serial);
-    Serial.println();
+    SerialJSON::sendPong();
   } else {
     SerialJSON::sendResponse(cmd.action, cmd.target, "not implemented", false);
   }
