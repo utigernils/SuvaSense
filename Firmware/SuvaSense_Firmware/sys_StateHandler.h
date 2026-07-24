@@ -1,5 +1,5 @@
-#ifndef STATE_HANDLER_H
-#define STATE_HANDLER_H
+#ifndef SYS_STATE_HANDLER_H
+#define SYS_STATE_HANDLER_H
 
 #include <Arduino.h>
 #include <Preferences.h>

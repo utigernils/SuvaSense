@@ -1,5 +1,5 @@
-#ifndef VEML7700_SENSOR_H
-#define VEML7700_SENSOR_H
+#ifndef HAL_VEML7700_H
+#define HAL_VEML7700_H
 
 #include <Arduino.h>
 #include <Adafruit_VEML7700.h>

@@ -1,8 +1,8 @@
-#include "MPU6050Sensor.h"
-#include "VEML7700Sensor.h"
-#include "BME680Sensor.h"
-#include "ESP32SystemSensor.h"
-#include "StateHandler.h"
+#include "hal_MPU6050.h"
+#include "hal_VEML7700.h"
+#include "hal_BME680.h"
+#include "hal_ESP32System.h"
+#include "sys_StateHandler.h"
 
 MPU6050Sensor mpu;
 VEML7700Sensor veml;
