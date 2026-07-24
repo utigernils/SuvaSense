@@ -58,7 +58,35 @@ bool StateHandler::_isFirstBoot() {
 
 void StateHandler::_enterFactory() {
   Serial.println("=== STATE: FACTORY ===");
-  Serial.println("First boot detected. Enter serial number...");
+  Serial.println("First boot detected. Enter serial number followed by newline...");
+
+  String input = "";
+  while (true) {
+    while (Serial.available()) {
+      char c = Serial.read();
+      if (c == '\n' || c == '\r') {
+        if (input.length() > 0) {
+          input.trim();
+          strncpy(_serialNumber, input.c_str(), sizeof(_serialNumber) - 1);
+
+          _prefs.begin(PREFS_NAMESPACE, false);
+          _prefs.putString(KEY_SERIAL_NUM, _serialNumber);
+          _prefs.putBool(KEY_FACTORY_DONE, true);
+          _prefs.end();
+
+          Serial.print("Serial number '");
+          Serial.print(_serialNumber);
+          Serial.println("' stored. Rebooting...");
+          delay(1000);
+          ESP.restart();
+        }
+        input = "";
+      } else {
+        input += c;
+      }
+    }
+    delay(10);
+  }
 }
 
 void StateHandler::_enterBootloader() {
