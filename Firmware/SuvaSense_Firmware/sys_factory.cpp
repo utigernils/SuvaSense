@@ -1,50 +1,43 @@
 #include "sys_factory.h"
 #include "hal_LED.h"
+#include "sys_storage_system.h"
+#include "sys_serial.h"
 #include <Arduino.h>
-#include <Preferences.h>
 
 extern LEDController leds;
-
-static const char* PREFS_NAMESPACE = "suva";
-static const char* KEY_FACTORY_DONE = "factory_done";
-static const char* KEY_SERIAL_NUM = "serial_num";
 
 static bool _done = false;
 
 void Factory::setup() {
   leds.setSystemColor(SystemColor::FACTORY);
-  Serial.println("=== FACTORY MODE ===");
-  Serial.println("Enter serial number followed by newline...");
+  SerialJSON::sendInfo("Factory mode - enter serial number via JSON or raw text");
   _done = false;
 }
 
 void Factory::loop() {
-  static String input = "";
-
   if (_done) return;
 
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c == '\n' || c == '\r') {
-      if (input.length() > 0) {
-        input.trim();
+  SerialJSON::Command cmd = SerialJSON::readCommand();
 
-        Preferences prefs;
-        prefs.begin(PREFS_NAMESPACE, false);
-        prefs.putString(KEY_SERIAL_NUM, input.c_str());
-        prefs.putBool(KEY_FACTORY_DONE, true);
-        prefs.end();
+  if (cmd.action == "set_serial" && cmd.valid) {
+    StorageSystem::setSerialNumber(cmd.value);
+    StorageSystem::setFactoryDone(true);
+    SerialJSON::sendInfo("Serial number stored. Rebooting...");
+    _done = true;
+    delay(1000);
+    ESP.restart();
+  }
 
-        Serial.print("Serial number '");
-        Serial.print(input);
-        Serial.println("' stored. Rebooting...");
-        _done = true;
-        delay(1000);
-        ESP.restart();
-      }
-      input = "";
-    } else {
-      input += c;
+  if (cmd.action == "_parse_error") {
+    String line = cmd.value;
+    line.trim();
+    if (line.length() > 0) {
+      StorageSystem::setSerialNumber(line);
+      StorageSystem::setFactoryDone(true);
+      SerialJSON::sendInfo("Serial number stored (raw). Rebooting...");
+      _done = true;
+      delay(1000);
+      ESP.restart();
     }
   }
 }

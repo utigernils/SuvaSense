@@ -3,6 +3,7 @@
 #include "sys_factory.h"
 #include "sys_bootloader.h"
 #include "sys_runtime.h"
+#include "sys_serial.h"
 
 LEDController leds;
 StateHandler stateHandler;
@@ -14,7 +15,7 @@ void setup() {
   leds.begin();
 
   currentState = stateHandler.boot();
-  Serial.println("=== Setup complete ===");
+  SerialJSON::sendInfo("Setup complete");
 }
 
 void loop() {
