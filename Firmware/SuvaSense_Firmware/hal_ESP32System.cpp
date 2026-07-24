@@ -1,4 +1,4 @@
-#include "ESP32SystemSensor.h"
+#include "hal_ESP32System.h"
 #include "esp_mac.h"
 #include "esp_chip_info.h"
 #include "esp_flash.h"

@@ -1,4 +1,4 @@
-#include "VEML7700Sensor.h"
+#include "hal_VEML7700.h"
 
 VEML7700Sensor::VEML7700Sensor(TwoWire &wire)
   : _veml() {

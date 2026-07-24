@@ -1,5 +1,5 @@
-#ifndef BME680_SENSOR_H
-#define BME680_SENSOR_H
+#ifndef HAL_BME680_H
+#define HAL_BME680_H
 
 #include <Arduino.h>
 #include <Adafruit_BME680.h>

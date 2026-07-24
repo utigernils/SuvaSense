@@ -1,5 +1,5 @@
-#ifndef ESP32_SYSTEM_SENSOR_H
-#define ESP32_SYSTEM_SENSOR_H
+#ifndef HAL_ESP32SYSTEM_H
+#define HAL_ESP32SYSTEM_H
 
 #include <Arduino.h>
 
