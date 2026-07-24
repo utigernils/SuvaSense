@@ -1,4 +1,4 @@
-#include "MPU6050Sensor.h"
+#include "hal_MPU6050.h"
 
 MPU6050Sensor::MPU6050Sensor(TwoWire &wire)
   : _mpu(wire) {

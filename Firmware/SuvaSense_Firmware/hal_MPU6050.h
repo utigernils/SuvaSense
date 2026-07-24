@@ -1,5 +1,5 @@
-#ifndef MPU6050_SENSOR_H
-#define MPU6050_SENSOR_H
+#ifndef HAL_MPU6050_H
+#define HAL_MPU6050_H
 
 #include <Arduino.h>
 #include <TinyMPU6050.h>
