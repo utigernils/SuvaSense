@@ -7,6 +7,7 @@
 extern LEDController leds;
 
 static unsigned long _lastReconnectAttempt = 0;
+static unsigned long _connectStart = 0;
 static bool _connecting = false;
 static bool _wasConnected = false;
 static uint8_t _blinkRemaining = 0;
@@ -36,6 +37,7 @@ void SysWiFi::setup() {
 
   SerialJSON::sendInfo("WiFi: connecting to " + ssid);
   _connecting = true;
+  _connectStart = millis();
 }
 
 void SysWiFi::loop() {
@@ -50,6 +52,11 @@ void SysWiFi::loop() {
       _startBlink(CRGB::Green);
     }
   } else {
+    if (_connecting && millis() - _connectStart > 15000) {
+      _connecting = false;
+      SerialJSON::sendWarn("WiFi: connection timed out");
+      _startBlink(CRGB::Red);
+    }
     if (_wasConnected) {
       _startBlink(CRGB::Red);
     }
