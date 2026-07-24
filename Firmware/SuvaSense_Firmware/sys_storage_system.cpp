@@ -6,7 +6,39 @@
 #include <Preferences.h>
 
 static const char* NS = "suva";
-static const char* KEY_BOOT_COUNT = "sys_bootcnt";
+static const char* KEY_FACTORY_DONE = "factory_done";
+static const char* KEY_SERIAL_NUM   = "serial_num";
+static const char* KEY_BOOT_COUNT   = "sys_bootcnt";
+
+bool StorageSystem::isFactoryDone() {
+  Preferences prefs;
+  prefs.begin(NS, true);
+  bool val = prefs.getBool(KEY_FACTORY_DONE, false);
+  prefs.end();
+  return val;
+}
+
+void StorageSystem::setFactoryDone(bool done) {
+  Preferences prefs;
+  prefs.begin(NS, false);
+  prefs.putBool(KEY_FACTORY_DONE, done);
+  prefs.end();
+}
+
+String StorageSystem::getSerialNumber() {
+  Preferences prefs;
+  prefs.begin(NS, true);
+  String val = prefs.getString(KEY_SERIAL_NUM, "");
+  prefs.end();
+  return val;
+}
+
+void StorageSystem::setSerialNumber(const String& serial) {
+  Preferences prefs;
+  prefs.begin(NS, false);
+  prefs.putString(KEY_SERIAL_NUM, serial);
+  prefs.end();
+}
 
 uint32_t StorageSystem::getBootCount() {
   Preferences prefs;

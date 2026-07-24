@@ -1,4 +1,5 @@
 #include "sys_storage_mqtt.h"
+#include "sys_storage_system.h"
 #include <Preferences.h>
 
 static const char* NS = "suva";
@@ -47,10 +48,7 @@ String StorageMQTT::getClientID() {
   prefs.end();
   if (val.length() > 0) return val;
 
-  prefs.begin(NS, true);
-  String serial = prefs.getString("serial_num", "");
-  prefs.end();
-  return serial;
+  return StorageSystem::getSerialNumber();
 }
 
 void StorageMQTT::setClientID(const String& clientID) {
@@ -97,10 +95,7 @@ String StorageMQTT::getTopicPrefix() {
   prefs.end();
   if (val.length() > 0) return val;
 
-  prefs.begin(NS, true);
-  String serial = prefs.getString("serial_num", "");
-  prefs.end();
-  return "suva/" + serial + "/";
+  return "suva/" + StorageSystem::getSerialNumber() + "/";
 }
 
 void StorageMQTT::setTopicPrefix(const String& prefix) {

@@ -4,6 +4,12 @@
 #include <Arduino.h>
 
 namespace StorageSystem {
+  bool isFactoryDone();
+  void setFactoryDone(bool done);
+
+  String getSerialNumber();
+  void setSerialNumber(const String& serial);
+
   uint32_t getBootCount();
   void setBootCount(uint32_t count);
   void incrementBootCount();
