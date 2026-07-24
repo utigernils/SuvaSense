@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-#define LED_PIN 2
+#define LED_PIN D2
 #define LED_COUNT 2
 
 enum class SystemColor {
