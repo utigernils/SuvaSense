@@ -1,13 +1,9 @@
 #include "sys_factory.h"
 #include "hal_LED.h"
+#include "sys_storage_system.h"
 #include <Arduino.h>
-#include <Preferences.h>
 
 extern LEDController leds;
-
-static const char* PREFS_NAMESPACE = "suva";
-static const char* KEY_FACTORY_DONE = "factory_done";
-static const char* KEY_SERIAL_NUM = "serial_num";
 
 static bool _done = false;
 
@@ -29,11 +25,8 @@ void Factory::loop() {
       if (input.length() > 0) {
         input.trim();
 
-        Preferences prefs;
-        prefs.begin(PREFS_NAMESPACE, false);
-        prefs.putString(KEY_SERIAL_NUM, input.c_str());
-        prefs.putBool(KEY_FACTORY_DONE, true);
-        prefs.end();
+        StorageSystem::setSerialNumber(input);
+        StorageSystem::setFactoryDone(true);
 
         Serial.print("Serial number '");
         Serial.print(input);
