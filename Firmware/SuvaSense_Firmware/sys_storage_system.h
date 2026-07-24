@@ -7,6 +7,7 @@ namespace StorageSystem {
   uint32_t getBootCount();
   void setBootCount(uint32_t count);
   void incrementBootCount();
+  void factoryReset();
 }
 
 #endif
