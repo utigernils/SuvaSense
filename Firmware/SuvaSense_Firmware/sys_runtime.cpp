@@ -31,12 +31,15 @@ static void _buildAndPublish() {
 
 void Runtime::setup() {
   leds.setSystemColor(SystemColor::RUNTIME);
+  leds.setBoth(CRGB::Green);
 
   Payload::setup();
 
   SysWiFi::setup();
   SysMQTT::setup();
   SerialJSON::sendInfo("Runtime started");
+
+  leds.setBoth(CRGB::Black);
 }
 
 void Runtime::loop() {
