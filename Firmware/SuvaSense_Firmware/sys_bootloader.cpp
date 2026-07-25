@@ -1,5 +1,6 @@
 #include "sys_bootloader.h"
 #include "hal_LED.h"
+#include "sys_payload.h"
 #include "sys_serial.h"
 #include "sys_storage_wifi.h"
 #include "sys_storage_mqtt.h"
@@ -10,6 +11,8 @@
 
 extern LEDController leds;
 
+static bool _streaming = false;
+
 static void handleGet(const String& target);
 static void handleSet(const String& target, const String& value);
 
@@ -19,6 +22,17 @@ void Bootloader::setup() {
 }
 
 void Bootloader::loop() {
+  if (_streaming) {
+    Payload::writeToSerial();
+
+    SerialJSON::Command cmd = SerialJSON::readCommand();
+    if (cmd.valid && cmd.action == "stream" && cmd.target == "stop") {
+      _streaming = false;
+      SerialJSON::sendInfo("Streaming stopped");
+    }
+    return;
+  }
+
   SerialJSON::Command cmd = SerialJSON::readCommand();
 
   if (cmd.action == "_parse_error") {
@@ -45,6 +59,20 @@ void Bootloader::loop() {
     SerialJSON::sendInfo("Rebooting...");
     delay(500);
     ESP.restart();
+    return;
+  }
+
+  if (cmd.action == "stream") {
+    if (cmd.target == "start") {
+      Payload::setup();
+      _streaming = true;
+      SerialJSON::sendInfo("Streaming started");
+    } else if (cmd.target == "stop") {
+      _streaming = false;
+      SerialJSON::sendInfo("Streaming stopped");
+    } else {
+      SerialJSON::sendResponse("stream", cmd.target, "unknown target", false);
+    }
     return;
   }
 
