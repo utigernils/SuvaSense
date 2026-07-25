@@ -13,6 +13,7 @@ static DeviceState currentState;
 void setup() {
   Serial.begin(115200);
   leds.begin();
+  leds.startupAnimation();
 
   currentState = stateHandler.boot();
   SerialJSON::sendInfo("Setup complete");
