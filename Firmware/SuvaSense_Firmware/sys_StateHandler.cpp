@@ -4,6 +4,9 @@
 #include "sys_runtime.h"
 #include "sys_storage_system.h"
 #include "sys_serial.h"
+#include "hal_LED.h"
+
+extern LEDController leds;
 
 StateHandler::StateHandler() {
 }
@@ -21,6 +24,9 @@ DeviceState StateHandler::boot() {
   bool bootloaderTriggered = false;
 
   while (millis() - start < 5000) {
+    bool blinkPhase = ((millis() - start) / 200) % 2;
+    leds.setBoth(blinkPhase ? CRGB::Orange : CRGB::Black);
+
     SerialJSON::Command cmd = SerialJSON::readCommand();
     if (cmd.valid && cmd.action == "bootloader") {
       bootloaderTriggered = true;
