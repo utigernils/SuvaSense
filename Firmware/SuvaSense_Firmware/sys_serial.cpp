@@ -54,7 +54,24 @@ SerialJSON::Command SerialJSON::readCommand() {
 
   if (!Serial.available()) return cmd;
 
-  String line = Serial.readStringUntil('\n');
+  static String lineBuffer;
+  bool hasLine = false;
+
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      hasLine = true;
+      break;
+    }
+    if (lineBuffer.length() < JSON_BUFFER) {
+      lineBuffer += c;
+    }
+  }
+
+  if (!hasLine) return cmd;
+
+  String line = lineBuffer;
+  lineBuffer = "";
   line.trim();
   if (line.length() == 0) return cmd;
 
