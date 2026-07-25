@@ -2,6 +2,11 @@
 
 Open-source ESP32 sensor board with MQTT firmware. Ships ready to flash — connect to serial, configure WiFi, and start publishing environmental data.
 
+<img  height="500" alt="image" src="https://github.com/user-attachments/assets/40b9ed89-22ae-41ba-aef7-5fb9d85fac8c" />
+<img height="500" alt="image" src="https://github.com/user-attachments/assets/89e5c55e-4446-4952-9355-4b11f0464027" />
+
+
+
 ## Hardware
 
 | Component | Details |
