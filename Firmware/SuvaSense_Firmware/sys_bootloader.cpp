@@ -29,6 +29,7 @@ void Bootloader::loop() {
     if (cmd.valid && cmd.action == "stream" && cmd.target == "stop") {
       _streaming = false;
       SerialJSON::sendInfo("Streaming stopped");
+      leds.setUserColor(CRGB::Black);
     }
     return;
   }
@@ -67,9 +68,11 @@ void Bootloader::loop() {
       Payload::setup();
       _streaming = true;
       SerialJSON::sendInfo("Streaming started");
+      leds.setUserColor(CRGB::Blue);
     } else if (cmd.target == "stop") {
       _streaming = false;
       SerialJSON::sendInfo("Streaming stopped");
+      leds.setUserColor(CRGB::Black);
     } else {
       SerialJSON::sendResponse("stream", cmd.target, "unknown target", false);
     }
