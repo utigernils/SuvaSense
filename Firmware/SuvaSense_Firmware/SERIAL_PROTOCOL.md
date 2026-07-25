@@ -25,6 +25,12 @@ Response to `{"action":"ping"}`.
 ```
 Success includes `value`, failure includes `error`.
 
+### Sensor Stream (bootloader only)
+```json
+{"mpu6050":{"acc":{"x":0.12,"y":-0.03,"z":9.81},"gyro":{"x":0.1,"y":0.2,"z":-0.1},"ang":{"x":1.5,"y":-0.8,"z":0.3}},"veml7700":{"lux":245.3,"white":198.7},"bme680":{"temp":23.5,"hum":54.2,"press":1013.2,"gas":145.6},"system":{"uptime":120,"cpu_temp":42.1,"free_heap":215000,"rssi":-55}}
+```
+Raw sensor JSON lines sent continuously during streaming mode. Each sensor object is only included if the sensor is enabled and initialized.
+
 ---
 
 ## Host → ESP (incoming)
@@ -46,21 +52,38 @@ All commands share the base format:
 | Command | Description |
 |---|---|
 | `{"action":"set_serial","value":"SN12345"}` | Store serial number, mark factory complete, reboot |
-| `<raw text line>` | Legacy fallback — non-JSON line treated as serial number |
+| `<raw text line>` | Legacy fallback — any non-JSON line is treated as the serial number |
 
-### Bootloader / Runtime
+The raw text fallback accepts any line that fails JSON parsing (e.g. just typing `SN12345` and pressing enter). After a successful serial number is stored, the device sets `factory_done` and reboots into normal operation.
+
+### Bootloader State
+
+Entered by sending `{"action":"bootloader"}` during the 5-second post-boot window, or automatically if the device has no saved configuration.
 
 | Command | Target | Value | Description |
 |---|---|---|---|
 | `{"action":"ping"}` | — | — | Health check → `{"type":"pong"}` |
-| `{"action":"reboot"}` | — | — | Restarts the ESP32 |
+| `{"action":"reboot"}` | — | — | Restarts the ESP32 after 500ms |
 | `{"action":"factory_reset"}` | — | — | Clears all settings except serial + factory_done, then reboots |
+| `{"action":"stream","target":"start"}` | `start` | — | Begin continuous sensor JSON output to serial |
+| `{"action":"stream","target":"stop"}` | `stop` | — | Stop sensor streaming |
 | `{"action":"get","target":"..."}` | *(see table below)* | — | Read a stored setting |
 | `{"action":"set","target":"...","value":"..."}` | *(see table below)* | string | Write a stored setting |
 
+### Runtime State
+
+Entered automatically after the 5-second bootloader window expires (if no `{"action":"bootloader"}` was sent).
+
+| Command | Target | Value | Description |
+|---|---|---|---|
+| `{"action":"ping"}` | — | — | Health check → `{"type":"pong"}` |
+| `{"action":"reboot"}` | — | — | Restarts the ESP32 after 500ms |
+
+> **Note:** `get`, `set`, `factory_reset`, and `stream` are only available in **Bootloader** state. To change configuration at runtime, reboot and trigger the bootloader during the 5-second window.
+
 ---
 
-## Available Targets
+## Available Targets (Bootloader get/set)
 
 ### WiFi
 | Target | Type | Read/Write |
@@ -96,6 +119,8 @@ All commands share the base format:
 | `user_led` | bool | RW (default `true`) |
 | `sys_led` | bool | RW (default `true`) |
 
+> **Note:** LED configuration values are stored but are not currently applied at runtime. The LED controller uses hardcoded defaults.
+
 ### System (read-only)
 | Target | Type |
 |---|---|
@@ -121,7 +146,17 @@ Boolean values accept `"true"` / `"false"` or `"1"` / `"0"`.
 ← {"type":"response","action":"get","target":"ssid","value":"MyNetwork"}
 ```
 
-### System info
+### Sensor Streaming
+```
+→ {"action":"stream","target":"start"}
+← {"type":"response","action":"stream","target":"start","value":"started"}
+← {"mpu6050":{"acc":{"x":0.12,"y":-0.03,...}},...}
+← {"mpu6050":{"acc":{"x":0.11,"y":-0.04,...}},...}
+→ {"action":"stream","target":"stop"}
+← {"type":"response","action":"stream","target":"stop","value":"stopped"}
+```
+
+### System Info
 ```
 → {"action":"get","target":"serial_num"}
 ← {"type":"response","action":"get","target":"serial_num","value":"SN12345"}
@@ -137,13 +172,18 @@ Boolean values accept `"true"` / `"false"` or `"1"` / `"0"`.
 ```
 Power on
   ├─ First boot (factory not done) → Factory state
-  │     Accepts {"action":"set_serial","value":"..."} or raw line
+  │     System LED: red heartbeat
+  │     Accepts {"action":"set_serial","value":"..."} or raw text line
   │     Stores serial → sets factory_done → reboots
   │
   └─ Normal boot
+        System LED: orange heartbeat during 5s window
         Waits 5s for {"action":"bootloader"}
         ├─ Received → Bootloader state
-        │     Accepts get/set/ping/reboot/factory_reset
+        │     System LED: orange heartbeat
+        │     Accepts get/set/stream/ping/reboot/factory_reset
         └─ Timeout → Runtime state
-              Accepts get/set/ping/reboot/factory_reset
+              System LED: green heartbeat
+              Accepts ping/reboot only
+              Publishes sensor data to MQTT every publish_interval ms
 ```
