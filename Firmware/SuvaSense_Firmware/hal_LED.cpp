@@ -55,3 +55,28 @@ void LEDController::setUserColor(uint8_t r, uint8_t g, uint8_t b) {
   _leds[1] = CRGB(r, g, b);
   FastLED.show();
 }
+
+void LEDController::startupAnimation() {
+  for (int i = 0; i < LED_COUNT; i++) {
+    _leds[i] = CRGB::Blue;
+    FastLED.show();
+    delay(80);
+    _leds[i] = CRGB::Black;
+    FastLED.show();
+    delay(40);
+  }
+
+  for (int i = 0; i < 2; i++) {
+    fill_solid(_leds, LED_COUNT, CRGB::Blue);
+    FastLED.show();
+    delay(120);
+    fill_solid(_leds, LED_COUNT, CRGB::Black);
+    FastLED.show();
+    delay(120);
+  }
+}
+
+void LEDController::setBoth(CRGB color) {
+  fill_solid(_leds, LED_COUNT, color);
+  FastLED.show();
+}

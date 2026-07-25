@@ -22,6 +22,9 @@ public:
   void setUserColor(CRGB color);
   void setUserColor(uint8_t r, uint8_t g, uint8_t b);
 
+  void startupAnimation();
+  void setBoth(CRGB color);
+
 private:
   CRGB _leds[LED_COUNT];
   unsigned long _lastBeat;
