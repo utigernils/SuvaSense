@@ -21,7 +21,12 @@ static void _blinkPublish() {
 
 static void _buildAndPublish() {
   String payload = Payload::build();
-  SysMQTT::publish("data", payload);
+  SerialJSON::sendInfo("MQTT publish: " + payload);
+  if (SysMQTT::publish("data", payload)) {
+    SerialJSON::sendInfo("MQTT publish succeeded");
+  } else {
+    SerialJSON::sendWarn("MQTT publish failed");
+  }
 }
 
 void Runtime::setup() {
