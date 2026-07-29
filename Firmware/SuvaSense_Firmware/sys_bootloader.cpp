@@ -89,6 +89,15 @@ void Bootloader::loop() {
     return;
   }
 
+  if (cmd.action == "selftest") {
+    SerialJSON::sendInfo("Selftest triggered for: " + cmd.target);
+    String result = Payload::selfTest(cmd.target);
+    Serial.print("{\"type\":\"selftest_result\",");
+    Serial.print(result.substring(1));
+    Serial.println();
+    return;
+  }
+
   SerialJSON::sendResponse(cmd.action, cmd.target, "unknown action", false);
 }
 
