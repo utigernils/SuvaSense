@@ -4,19 +4,13 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { SerialMessage } from "@/lib/types"
-import { ArrowUp, ArrowDown, Send, Info, AlertTriangle, XCircle, CheckCircle, Activity, FileJson } from "lucide-react"
+import { ArrowUp, ArrowDown, Send, CheckCircle, Activity, FileJson } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SerialLogProps {
   messages: SerialMessage[]
   disabled?: boolean
   onSend: (message: string) => void
-}
-
-const levelBadge: Record<string, { variant: "default" | "secondary" | "destructive"; icon: React.ReactNode }> = {
-  info: { variant: "default", icon: <Info className="h-3 w-3" /> },
-  warn: { variant: "secondary", icon: <AlertTriangle className="h-3 w-3" /> },
-  error: { variant: "destructive", icon: <XCircle className="h-3 w-3" /> },
 }
 
 function formatParsedMessage(msg: SerialMessage) {

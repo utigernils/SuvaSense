@@ -19,7 +19,6 @@ import {
   PlugZap,
   RefreshCw,
   Info,
-  Circle,
   Wifi,
   WifiOff,
 } from "lucide-react"
@@ -94,9 +93,9 @@ export function Header({
               {connectionState === "connected" && <Wifi className="h-4 w-4" />}
               <span className="text-xs font-medium">{connectionLabel[connectionState]}</span>
             </div>
-            <TooltipProvider delayDuration={0}>
+            <TooltipProvider delay={0}>
               <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger>
                   <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="bottom">

@@ -1,8 +1,10 @@
-export enum DeviceState {
-  FACTORY = "factory",
-  BOOTLOADER = "bootloader",
-  RUNNING = "runtime",
-}
+export const DeviceState = {
+  FACTORY: "factory",
+  BOOTLOADER: "bootloader",
+  RUNNING: "runtime",
+} as const
+
+export type DeviceState = (typeof DeviceState)[keyof typeof DeviceState]
 
 export interface MPU6050Data {
   acc: { x: number; y: number; z: number }

@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Info } from "lucide-react"
 
@@ -43,9 +42,9 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
                 {field.label}
               </Label>
               {field.description && (
-                <TooltipProvider delayDuration={0}>
+                <TooltipProvider delay={0}>
                   <Tooltip>
-                    <TooltipTrigger asChild>
+                    <TooltipTrigger>
                       <Info className="h-3 w-3 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -74,7 +73,9 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
             ) : field.type === "select" && field.options ? (
               <Select
                 value={String(field.value)}
-                onValueChange={(v) => onChange(field.key, v)}
+                onValueChange={(v) => {
+                  if (v) onChange(field.key, v)
+                }}
                 disabled={disabled || field.readOnly}
               >
                 <SelectTrigger className="h-8 text-xs">

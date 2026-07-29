@@ -44,9 +44,9 @@ export function SensorCard({
                 {i2cAddress}
               </Badge>
             )}
-            <TooltipProvider delayDuration={0}>
+            <TooltipProvider delay={0}>
               <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger>
                   <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
