@@ -82,45 +82,45 @@ export function Overview({
     <div className="flex h-full flex-1 min-h-0 flex-col">
       <div className="flex-1 min-h-0 overflow-hidden p-4 pb-3">
         <div className="grid h-full min-h-0 grid-cols-2 grid-rows-2 gap-5">
-            <SensorCard
-              title="System"
-              icon={<Cpu className="h-4 w-4" />}
-              description="ESP32 system telemetry: uptime, CPU temperature, free heap memory, and WiFi signal strength."
-              values={payload.system ? formatSystem(payload.system) : []}
-              selftestResult={selftest.esp32}
-              onSelftest={() => onSelftest("esp32")}
-              disabled={controlsDisabled}
-            />
-            <SensorCard
-              title="BME680"
-              icon={<Wind className="h-4 w-4" />}
-              i2cAddress="0x77"
-              description="Temperature, humidity, pressure, and gas sensor. Connected via I2C at address 0x77."
-              values={payload.bme680 ? formatBME680(payload.bme680) : []}
-              selftestResult={selftest.bme680}
-              onSelftest={() => onSelftest("bme680")}
-              disabled={controlsDisabled}
-            />
-            <SensorCard
-              title="VEML7700"
-              icon={<Sun className="h-4 w-4" />}
-              i2cAddress="0x10"
-              description="Ambient light sensor. Connected via I2C at address 0x10."
-              values={payload.veml7700 ? formatVEML7700(payload.veml7700) : []}
-              selftestResult={selftest.veml7700}
-              onSelftest={() => onSelftest("veml7700")}
-              disabled={controlsDisabled}
-            />
-            <SensorCard
-              title="MPU6050"
-              icon={<Rotate3d className="h-4 w-4" />}
-              i2cAddress="0x68"
-              description="6-axis accelerometer and gyroscope. Connected via I2C at address 0x68."
-              values={payload.mpu6050 ? formatMPU6050(payload.mpu6050) : []}
-              selftestResult={selftest.mpu6050}
-              onSelftest={() => onSelftest("mpu6050")}
-              disabled={controlsDisabled}
-            />
+          <SensorCard
+            title="System"
+            icon={<Cpu className="h-4 w-4" />}
+            description="ESP32 system telemetry: uptime, CPU temperature, free heap memory, and WiFi signal strength."
+            values={payload.system ? formatSystem(payload.system) : []}
+            selftestResult={selftest.esp32}
+            onSelftest={() => onSelftest("esp32")}
+            disabled={controlsDisabled}
+          />
+          <SensorCard
+            title="BME680"
+            icon={<Wind className="h-4 w-4" />}
+            i2cAddress="0x77"
+            description="Temperature, humidity, pressure, and gas sensor. Connected via I2C at address 0x77."
+            values={payload.bme680 ? formatBME680(payload.bme680) : []}
+            selftestResult={selftest.bme680}
+            onSelftest={() => onSelftest("bme680")}
+            disabled={controlsDisabled}
+          />
+          <SensorCard
+            title="VEML7700"
+            icon={<Sun className="h-4 w-4" />}
+            i2cAddress="0x10"
+            description="Ambient light sensor. Connected via I2C at address 0x10."
+            values={payload.veml7700 ? formatVEML7700(payload.veml7700) : []}
+            selftestResult={selftest.veml7700}
+            onSelftest={() => onSelftest("veml7700")}
+            disabled={controlsDisabled}
+          />
+          <SensorCard
+            title="MPU6050"
+            icon={<Rotate3d className="h-4 w-4" />}
+            i2cAddress="0x68"
+            description="6-axis accelerometer and gyroscope. Connected via I2C at address 0x68."
+            values={payload.mpu6050 ? formatMPU6050(payload.mpu6050) : []}
+            selftestResult={selftest.mpu6050}
+            onSelftest={() => onSelftest("mpu6050")}
+            disabled={controlsDisabled}
+          />
         </div>
       </div>
 

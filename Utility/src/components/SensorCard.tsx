@@ -1,25 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { SelftestResult } from "@/lib/types"
-import { FlaskConical, CheckCircle, XCircle, Info } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { SelftestResult } from "@/lib/types";
+import { FlaskConical, CheckCircle, XCircle, Info } from "lucide-react";
 
 interface SensorValue {
-  label: string
-  value: string
-  unit: string
+  label: string;
+  value: string;
+  unit: string;
 }
 
 interface SensorCardProps {
-  title: string
-  icon: React.ReactNode
-  i2cAddress?: string
-  description: string
-  values: SensorValue[]
-  selftestResult?: SelftestResult
-  onSelftest: () => void
-  disabled?: boolean
+  title: string;
+  icon: React.ReactNode;
+  i2cAddress?: string;
+  description: string;
+  values: SensorValue[];
+  selftestResult?: SelftestResult;
+  onSelftest: () => void;
+  disabled?: boolean;
 }
 
 export function SensorCard({
@@ -40,7 +45,10 @@ export function SensorCard({
             {icon}
             <CardTitle className="text-sm font-semibold">{title}</CardTitle>
             {i2cAddress && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-mono">
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 font-mono"
+              >
                 {i2cAddress}
               </Badge>
             )}
@@ -71,11 +79,15 @@ export function SensorCard({
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 flex-1">
           {values.map((v) => (
             <div key={v.label} className="flex items-baseline gap-1">
-              <span className="text-[11px] text-muted-foreground leading-tight">{v.label}</span>
+              <span className="text-[11px] text-muted-foreground leading-tight">
+                {v.label}
+              </span>
               <span className="text-sm font-mono font-medium tabular-nums ml-auto leading-tight">
                 {v.value}
               </span>
-              <span className="text-[10px] text-muted-foreground leading-tight">{v.unit}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">
+                {v.unit}
+              </span>
             </div>
           ))}
         </div>
@@ -92,10 +104,14 @@ export function SensorCard({
             ) : (
               <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             )}
-            <span>{selftestResult.ok ? selftestResult.message : selftestResult.error}</span>
+            <span>
+              {selftestResult.ok
+                ? selftestResult.message
+                : selftestResult.error}
+            </span>
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
