@@ -96,7 +96,7 @@ export function Settings({
       <div className="grid grid-cols-2 gap-4">
         <SettingsGroup
           title="WiFi"
-          icon={<Wifi className="h-4 w-4 text-blue-400" />}
+          icon={<Wifi className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
@@ -130,7 +130,7 @@ export function Settings({
 
         <SettingsGroup
           title="MQTT"
-          icon={<Radio className="h-4 w-4 text-green-400" />}
+          icon={<Radio className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
@@ -192,7 +192,7 @@ export function Settings({
 
         <SettingsGroup
           title="Sensors"
-          icon={<Thermometer className="h-4 w-4 text-orange-400" />}
+          icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
@@ -240,7 +240,7 @@ export function Settings({
 
         <SettingsGroup
           title="LED"
-          icon={<Lightbulb className="h-4 w-4 text-yellow-400" />}
+          icon={<Lightbulb className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
