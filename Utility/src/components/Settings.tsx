@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { SettingsGroup } from "@/components/SettingsGroup"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +15,6 @@ import {
   Radio,
   Thermometer,
   Lightbulb,
-  Cpu,
   Trash2,
 } from "lucide-react"
 
@@ -202,33 +200,6 @@ export function Settings({
           ]}
           onChange={(key, value) => onSettingChange("led", key, value)}
         />
-
-        <Card className="col-span-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-semibold">System Info</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-x-6 gap-y-2">
-              <div>
-                <span className="text-[11px] text-muted-foreground">Serial Number</span>
-                <p className="text-sm font-mono font-medium">{settings.system.serial_num || "—"}</p>
-              </div>
-              <div>
-                <span className="text-[11px] text-muted-foreground">Boot Count</span>
-                <p className="text-sm font-mono font-medium">{settings.system.boot_count}</p>
-              </div>
-              <div>
-                <span className="text-[11px] text-muted-foreground">Factory Setup</span>
-                <p className="text-sm font-mono font-medium">
-                  {settings.system.factory_done ? "Complete" : "Pending"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <div className="col-span-2">
           <Button

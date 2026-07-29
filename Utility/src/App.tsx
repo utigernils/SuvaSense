@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Header } from "@/components/Header"
+import { SubHeader } from "@/components/SubHeader"
 import { Overview } from "@/components/Overview"
 import { Settings } from "@/components/Settings"
 import { DeviceState, type ConnectionState, type SensorPayload, type SelftestState, type SerialMessage, type DeviceSettings } from "@/lib/types"
@@ -16,7 +17,6 @@ import {
   mockSerialLogs,
   mockStreamData,
 } from "@/lib/mock"
-import { LayoutDashboard, Settings2 } from "lucide-react"
 import "./App.css"
 
 function App() {
@@ -24,6 +24,7 @@ function App() {
   const [connectionState] = useState<ConnectionState>("connected")
   const [autoHook, setAutoHook] = useState(true)
   const [countdown] = useState(0)
+  const [page, setPage] = useState<"overview" | "settings">("overview")
   const [streaming, setStreaming] = useState(false)
   const [payload] = useState<SensorPayload>(mockPayload)
   const [selftest, setSelftest] = useState<SelftestState>({})
@@ -288,19 +289,8 @@ function App() {
           onSetSerial={handleSetSerial}
           countdown={countdown}
         />
-        <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
-          <div className="border-b px-6">
-            <TabsList className="h-9">
-              <TabsTrigger value="overview" className="text-xs gap-1.5">
-                <LayoutDashboard className="h-3.5 w-3.5" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs gap-1.5">
-                <Settings2 className="h-3.5 w-3.5" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <Tabs value={page} onValueChange={(v) => setPage(v as "overview" | "settings")} className="flex-1 flex flex-col min-h-0">
+          <SubHeader systemInfo={settings.system} page={page} />
           <TabsContent value="overview" className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col m-0 p-0">
             <Overview
               deviceState={deviceState}
