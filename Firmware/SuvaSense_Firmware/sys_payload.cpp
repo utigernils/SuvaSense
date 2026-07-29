@@ -3,6 +3,7 @@
 #include "hal_VEML7700.h"
 #include "hal_BME680.h"
 #include "hal_ESP32System.h"
+#include "hal_LED.h"
 #include "sys_storage_sensors.h"
 #include "sys_serial.h"
 #include <ArduinoJson.h>
@@ -12,6 +13,8 @@ static MPU6050Sensor mpuSensor;
 static VEML7700Sensor vemlSensor;
 static BME680Sensor bmeSensor;
 static ESP32SystemSensor sysSensor;
+
+extern LEDController leds;
 
 static bool _mpuOk = false;
 static bool _vemlOk = false;
@@ -101,4 +104,43 @@ void Payload::writeToSerial() {
   _buildDoc(doc);
   serializeJson(doc, Serial);
   Serial.println();
+}
+
+String Payload::selfTest(const String& sensorName) {
+  if (!_initialized) {
+    Payload::setup();
+  }
+
+  SelfTestResult result;
+
+  if (sensorName == "bme680" || sensorName == "bme") {
+    result = bmeSensor.selfTest();
+  } else if (sensorName == "mpu6050" || sensorName == "mpu") {
+    result = mpuSensor.selfTest();
+  } else if (sensorName == "veml7700" || sensorName == "veml") {
+    result = vemlSensor.selfTest();
+  } else if (sensorName == "esp32" || sensorName == "system") {
+    result = sysSensor.selfTest();
+  } else if (sensorName == "led") {
+    result = leds.selfTest();
+  } else {
+    StaticJsonDocument<128> doc;
+    doc["ok"] = false;
+    doc["error"] = "unknown sensor: " + sensorName;
+    String out;
+    serializeJson(doc, out);
+    return out;
+  }
+
+  StaticJsonDocument<256> doc;
+  doc["ok"] = result.ok;
+  doc["sensor"] = result.name;
+  if (result.ok) {
+    doc["message"] = result.message;
+  } else {
+    doc["error"] = result.message;
+  }
+  String out;
+  serializeJson(doc, out);
+  return out;
 }

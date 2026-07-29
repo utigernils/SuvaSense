@@ -7,6 +7,7 @@ namespace Payload {
   void setup();
   String build();
   void writeToSerial();
+  String selfTest(const String& sensorName);
 }
 
 #endif
