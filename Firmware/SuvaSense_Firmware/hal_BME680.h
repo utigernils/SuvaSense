@@ -12,11 +12,21 @@ struct BME680Data {
   float altitude;
 };
 
+#ifndef HAL_SELFTEST_RESULT
+#define HAL_SELFTEST_RESULT
+struct SelfTestResult {
+  String name;
+  bool ok;
+  String message;
+};
+#endif
+
 class BME680Sensor {
 public:
   BME680Sensor(TwoWire &wire = Wire);
   bool begin();
   BME680Data read();
+  SelfTestResult selfTest();
 
 private:
   Adafruit_BME680 _bme;
