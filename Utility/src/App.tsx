@@ -1,334 +1,118 @@
-import { useState, useCallback } from "react";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Header } from "@/components/Header";
-import { SubHeader } from "@/components/SubHeader";
-import { Overview } from "@/components/Overview";
-import { Settings } from "@/components/Settings";
-import {
-  DeviceState,
-  type ConnectionState,
-  type SensorPayload,
-  type SelftestState,
-  type SerialMessage,
-  type DeviceSettings,
-} from "@/lib/types";
-import {
-  mockPayload,
-  mockSelftestBME680,
-  mockSelftestMPU6050,
-  mockSelftestVEML7700,
-  mockSelftestESP32,
-  mockSelftestLED,
-  mockSettings,
-  mockSerialLogs,
-  mockStreamData,
-} from "@/lib/mock";
-import "./App.css";
+import { useState, useCallback, useEffect } from "react"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { Header } from "@/components/Header"
+import { SubHeader } from "@/components/SubHeader"
+import { Overview } from "@/components/Overview"
+import { Settings } from "@/components/Settings"
+import { useSerial } from "@/hooks/useSerial"
+import { Commands } from "@/lib/protocol"
+import { type DeviceSettings, type SensorPayload } from "@/lib/types"
+import { mockSettings, mockPayload } from "@/lib/mock"
+import "./App.css"
 
 function App() {
-  const [deviceState, setDeviceState] = useState<DeviceState>(
-    DeviceState.BOOTLOADER,
-  );
-  const [connectionState] = useState<ConnectionState>("connected");
-  const [autoHook, setAutoHook] = useState(true);
-  const [countdown] = useState(0);
-  const [page, setPage] = useState<"overview" | "settings">("overview");
-  const [streaming, setStreaming] = useState(false);
-  const [payload] = useState<SensorPayload>(mockPayload);
-  const [selftest, setSelftest] = useState<SelftestState>({});
-  const [serialLogs, setSerialLogs] = useState<SerialMessage[]>(mockSerialLogs);
-  const [streamData] = useState<SensorPayload[]>(mockStreamData);
-  const [settings, setSettings] = useState<DeviceSettings>(mockSettings);
+  const {
+    connectionState,
+    deviceState,
+    messages,
+    payload,
+    selftest,
+    autoHook,
+    countdown,
+    connect,
+    disconnect,
+    sendCommand,
+    setAutoHook,
+    setDeviceState,
+    setMessages,
+  } = useSerial()
+
+  const [page, setPage] = useState<"overview" | "settings">("overview")
+  const [streaming, setStreaming] = useState(false)
+  const [settings, setSettings] = useState<DeviceSettings>(mockSettings)
+  const [streamData, setStreamData] = useState<SensorPayload[]>([])
+
+  useEffect(() => {
+    if (streaming && connectionState === "connected") {
+      setStreamData((prev) => [...prev, payload].slice(-100))
+    }
+  }, [payload, streaming, connectionState])
+
+  const handleConnect = useCallback(() => {
+    setMessages([])
+    connect()
+  }, [connect, setMessages])
+
+  const handleDisconnect = useCallback(() => {
+    setStreaming(false)
+    disconnect()
+  }, [disconnect])
 
   const handleSendBootloader = useCallback(() => {
-    setSerialLogs((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        direction: "tx",
-        raw: '{"action":"bootloader"}',
-        parsed: { type: "unknown", action: "bootloader" },
-      },
-    ]);
-    setTimeout(() => {
-      setDeviceState(DeviceState.BOOTLOADER);
-      setSerialLogs((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          direction: "rx",
-          raw: '{"type":"log","level":"info","message":"Bootloader mode active"}',
-          parsed: {
-            type: "log",
-            level: "info",
-            message: "Bootloader mode active",
-          },
-        },
-      ]);
-    }, 300);
-  }, []);
+    sendCommand(Commands.bootloader())
+  }, [sendCommand])
 
   const handleReboot = useCallback(() => {
-    setSerialLogs((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        direction: "tx",
-        raw: '{"action":"reboot"}',
-        parsed: { type: "unknown", action: "reboot" },
-      },
-    ]);
-  }, []);
+    sendCommand(Commands.reboot())
+  }, [sendCommand])
 
-  const handleSetSerial = useCallback((serial: string) => {
-    setSerialLogs((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        direction: "tx",
-        raw: JSON.stringify({ action: "set_serial", value: serial }),
-        parsed: { type: "unknown", action: "set_serial" },
-      },
-    ]);
-    setSettings((prev) => ({
-      ...prev,
-      system: { ...prev.system, serial_num: serial, factory_done: true },
-    }));
-    setDeviceState(DeviceState.BOOTLOADER);
-  }, []);
-
-  const handleSelftest = useCallback((sensor: string) => {
-    const selftestMap: Record<string, { id: string; result: () => void }> = {
-      bme680: {
-        id: crypto.randomUUID(),
-        result: () =>
-          setSelftest((prev) => ({ ...prev, bme680: mockSelftestBME680 })),
-      },
-      mpu6050: {
-        id: crypto.randomUUID(),
-        result: () =>
-          setSelftest((prev) => ({ ...prev, mpu6050: mockSelftestMPU6050 })),
-      },
-      veml7700: {
-        id: crypto.randomUUID(),
-        result: () =>
-          setSelftest((prev) => ({ ...prev, veml7700: mockSelftestVEML7700 })),
-      },
-      esp32: {
-        id: crypto.randomUUID(),
-        result: () =>
-          setSelftest((prev) => ({ ...prev, esp32: mockSelftestESP32 })),
-      },
-      led: {
-        id: crypto.randomUUID(),
-        result: () =>
-          setSelftest((prev) => ({ ...prev, led: mockSelftestLED })),
-      },
-    };
-
-    const entry = selftestMap[sensor];
-    if (!entry) return;
-
-    setSerialLogs((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        direction: "tx",
-        raw: JSON.stringify({ action: "selftest", target: sensor }),
-        parsed: { type: "unknown", action: "selftest", target: sensor },
-      },
-    ]);
-
-    setTimeout(() => {
-      setSerialLogs((prev) => [
+  const handleSetSerial = useCallback(
+    (serial: string) => {
+      sendCommand(Commands.setSerial(serial))
+      setSettings((prev) => ({
         ...prev,
-        {
-          id: entry.id,
-          timestamp: Date.now(),
-          direction: "rx",
-          raw: JSON.stringify({
-            type: "log",
-            level: "info",
-            message: `Selftest triggered for: ${sensor}`,
-          }),
-          parsed: {
-            type: "log",
-            level: "info",
-            message: `Selftest triggered for: ${sensor}`,
-          },
-        },
-      ]);
-      entry.result();
-    }, 500);
-  }, []);
+        system: { ...prev.system, serial_num: serial, factory_done: true },
+      }))
+      setTimeout(() => setDeviceState("bootloader"), 1500)
+    },
+    [sendCommand, setDeviceState]
+  )
 
-  const handleSerialSend = useCallback((msg: string) => {
-    let parsed = undefined;
-    try {
-      const obj = JSON.parse(msg);
-      parsed = { type: "unknown" as const, ...obj };
-    } catch {
-      parsed = undefined;
-    }
+  const handleSelftest = useCallback(
+    (sensor: string) => {
+      sendCommand(Commands.selftest(sensor))
+    },
+    [sendCommand]
+  )
 
-    setSerialLogs((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        direction: "tx",
-        raw: msg,
-        parsed,
-      },
-    ]);
-  }, []);
+  const handleSerialSend = useCallback(
+    (msg: string) => {
+      sendCommand(msg)
+    },
+    [sendCommand]
+  )
 
-  const handleStreamingChange = useCallback((v: boolean) => {
-    setStreaming(v);
-    if (v) {
-      setSerialLogs((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          direction: "tx",
-          raw: '{"action":"stream","target":"start"}',
-          parsed: { type: "unknown", action: "stream", target: "start" },
-        },
-      ]);
-      setTimeout(() => {
-        setSerialLogs((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            timestamp: Date.now(),
-            direction: "rx",
-            raw: '{"type":"log","level":"info","message":"Streaming started"}',
-            parsed: {
-              type: "log",
-              level: "info",
-              message: "Streaming started",
-            },
-          },
-        ]);
-      }, 300);
-    } else {
-      setSerialLogs((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          direction: "tx",
-          raw: '{"action":"stream","target":"stop"}',
-          parsed: { type: "unknown", action: "stream", target: "stop" },
-        },
-      ]);
-      setTimeout(() => {
-        setSerialLogs((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            timestamp: Date.now(),
-            direction: "rx",
-            raw: '{"type":"log","level":"info","message":"Streaming stopped"}',
-            parsed: {
-              type: "log",
-              level: "info",
-              message: "Streaming stopped",
-            },
-          },
-        ]);
-      }, 300);
-    }
-  }, []);
+  const handleStreamingChange = useCallback(
+    (v: boolean) => {
+      setStreaming(v)
+      if (v) {
+        setStreamData([])
+        sendCommand(Commands.streamStart())
+      } else {
+        sendCommand(Commands.streamStop())
+      }
+    },
+    [sendCommand]
+  )
 
   const handleSettingChange = useCallback(
-    (
-      section: keyof DeviceSettings,
-      key: string,
-      value: string | number | boolean,
-    ) => {
+    (section: keyof DeviceSettings, key: string, value: string | number | boolean) => {
       setSettings((prev) => {
-        const sectionData = { ...prev[section] } as Record<string, unknown>;
-        sectionData[key] = value;
-        return { ...prev, [section]: sectionData };
-      });
-
-      const target = key;
-      setSerialLogs((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          direction: "tx",
-          raw: JSON.stringify({ action: "set", target, value: String(value) }),
-          parsed: { type: "unknown", action: "set", target },
-        },
-      ]);
-
-      setTimeout(() => {
-        const responseValue = target.includes("password")
-          ? "***"
-          : String(value);
-        setSerialLogs((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            timestamp: Date.now(),
-            direction: "rx",
-            raw: JSON.stringify({
-              type: "response",
-              action: "set",
-              target,
-              value: responseValue,
-            }),
-            parsed: {
-              type: "response",
-              action: "set",
-              target,
-              value: responseValue,
-            },
-          },
-        ]);
-      }, 200);
+        const sectionData = { ...prev[section] } as Record<string, unknown>
+        sectionData[key] = value
+        return { ...prev, [section]: sectionData }
+      })
+      sendCommand(Commands.set(key, String(value)))
     },
-    [],
-  );
+    [sendCommand]
+  )
 
   const handleFactoryReset = useCallback(() => {
-    setSerialLogs((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        direction: "tx",
-        raw: '{"action":"factory_reset"}',
-        parsed: { type: "unknown", action: "factory_reset" },
-      },
-    ]);
-    setTimeout(() => {
-      setSerialLogs((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          direction: "rx",
-          raw: '{"type":"log","level":"info","message":"Factory reset complete. Rebooting..."}',
-          parsed: {
-            type: "log",
-            level: "info",
-            message: "Factory reset complete. Rebooting...",
-          },
-        },
-      ]);
-    }, 500);
-  }, []);
+    sendCommand(Commands.factoryReset())
+  }, [sendCommand])
+
+  const displayPayload = connectionState === "connected" ? payload : mockPayload
 
   return (
     <TooltipProvider delay={0}>
@@ -342,6 +126,8 @@ function App() {
           onReboot={handleReboot}
           onSetSerial={handleSetSerial}
           countdown={countdown}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
         />
         <Tabs
           value={page}
@@ -357,18 +143,15 @@ function App() {
               deviceState={deviceState}
               streaming={streaming}
               onStreamingChange={handleStreamingChange}
-              payload={payload}
+              payload={displayPayload}
               selftest={selftest}
               onSelftest={handleSelftest}
-              serialLogs={serialLogs}
+              serialLogs={messages}
               onSerialSend={handleSerialSend}
               streamData={streamData}
             />
           </TabsContent>
-          <TabsContent
-            value="settings"
-            className="flex-1 overflow-auto m-0 p-0"
-          >
+          <TabsContent value="settings" className="flex-1 overflow-auto m-0 p-0">
             <Settings
               settings={settings}
               deviceState={deviceState}
@@ -379,7 +162,7 @@ function App() {
         </Tabs>
       </div>
     </TooltipProvider>
-  );
+  )
 }
 
-export default App;
+export default App

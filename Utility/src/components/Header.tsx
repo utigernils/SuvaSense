@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DeviceState, type ConnectionState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -32,6 +32,8 @@ interface HeaderProps {
   onReboot: () => void
   onSetSerial: (serial: string) => void
   countdown: number
+  onConnect: () => void
+  onDisconnect: () => void
 }
 
 export function Header({
@@ -43,9 +45,17 @@ export function Header({
   onReboot,
   onSetSerial,
   countdown,
+  onConnect,
+  onDisconnect,
 }: HeaderProps) {
   const [factoryOpen, setFactoryOpen] = useState(false)
   const [serialInput, setSerialInput] = useState("")
+
+  useEffect(() => {
+    if (deviceState === DeviceState.FACTORY) {
+      setFactoryOpen(true)
+    }
+  }, [deviceState])
 
   const connectionLabel: Record<ConnectionState, string> = {
     disconnected: "Disconnected",
@@ -135,7 +145,7 @@ export function Header({
             disabled={
               deviceState === DeviceState.BOOTLOADER ||
               deviceState === DeviceState.FACTORY ||
-              connectionState === "disconnected"
+              connectionState !== "connected"
             }
             className="text-xs gap-1.5"
           >
@@ -147,12 +157,36 @@ export function Header({
             variant="outline"
             size="sm"
             onClick={onReboot}
-            disabled={connectionState === "disconnected"}
+            disabled={connectionState !== "connected"}
             className="text-xs gap-1.5"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Reboot
           </Button>
+
+          <Separator />
+
+          {connectionState === "disconnected" ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onConnect}
+              className="text-xs gap-1.5"
+            >
+              <Plug className="h-3.5 w-3.5" />
+              Connect
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onDisconnect}
+              className="text-xs gap-1.5"
+            >
+              <Plug className="h-3.5 w-3.5" />
+              Disconnect
+            </Button>
+          )}
         </div>
       </div>
 
