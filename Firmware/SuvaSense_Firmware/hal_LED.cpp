@@ -23,8 +23,41 @@ bool LEDController::begin() {
   _systemColor = SystemColor::RUNTIME;
   _lastBeat = 0;
   _beatState = false;
+  _initialized = true;
 
   return true;
+}
+
+SelfTestResult LEDController::selfTest() {
+  SelfTestResult result;
+  result.name = "LED";
+
+  if (!_initialized) {
+    result.ok = false;
+    result.message = "LED strip not initialized";
+    return result;
+  }
+
+  CRGB saved0 = _leds[0];
+  CRGB saved1 = _leds[1];
+
+  _leds[0] = CRGB::Green;
+  _leds[1] = CRGB::Green;
+  FastLED.show();
+  delay(200);
+
+  _leds[0] = CRGB::Black;
+  _leds[1] = CRGB::Black;
+  FastLED.show();
+  delay(200);
+
+  _leds[0] = saved0;
+  _leds[1] = saved1;
+  FastLED.show();
+
+  result.ok = true;
+  result.message = "OK - " + String(LED_COUNT) + "x WS2813 on pin D2";
+  return result;
 }
 
 void LEDController::update() {
