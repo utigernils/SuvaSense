@@ -33,7 +33,7 @@ export function SensorCard({
   disabled,
 }: SensorCardProps) {
   return (
-    <Card className="relative">
+    <Card className="relative h-full flex flex-col aspect-square">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -67,15 +67,15 @@ export function SensorCard({
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <CardContent className="flex-1 flex flex-col">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 flex-1">
           {values.map((v) => (
             <div key={v.label} className="flex items-baseline gap-1">
-              <span className="text-[11px] text-muted-foreground">{v.label}</span>
-              <span className="text-sm font-mono font-medium tabular-nums ml-auto">
+              <span className="text-[11px] text-muted-foreground leading-tight">{v.label}</span>
+              <span className="text-sm font-mono font-medium tabular-nums ml-auto leading-tight">
                 {v.value}
               </span>
-              <span className="text-[10px] text-muted-foreground">{v.unit}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">{v.unit}</span>
             </div>
           ))}
         </div>
