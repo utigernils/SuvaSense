@@ -1,21 +1,28 @@
-import { useRef, useEffect, useState } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import type { SerialMessage } from "@/lib/types"
-import { ArrowUp, ArrowDown, Send, CheckCircle, Activity, FileJson } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useRef, useEffect, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import type { SerialMessage } from "@/lib/types";
+import {
+  ArrowUp,
+  ArrowDown,
+  Send,
+  CheckCircle,
+  Activity,
+  FileJson,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SerialLogProps {
-  messages: SerialMessage[]
-  disabled?: boolean
-  onSend: (message: string) => void
+  messages: SerialMessage[];
+  disabled?: boolean;
+  onSend: (message: string) => void;
 }
 
 function formatParsedMessage(msg: SerialMessage) {
-  const p = msg.parsed
-  if (!p) return msg.raw
+  const p = msg.parsed;
+  if (!p) return msg.raw;
 
   switch (p.type) {
     case "log":
@@ -23,40 +30,48 @@ function formatParsedMessage(msg: SerialMessage) {
         <span>
           <span className="text-muted-foreground">[{p.level}]</span> {p.message}
         </span>
-      )
+      );
     case "pong":
       return (
         <span className="flex items-center gap-1">
           <CheckCircle className="h-3 w-3 text-green-500" />
           Pong — device alive
         </span>
-      )
+      );
     case "response":
       if (p.error) {
         return (
           <span>
-            <span className="text-muted-foreground">{p.action} {p.target}:</span>{" "}
+            <span className="text-muted-foreground">
+              {p.action} {p.target}:
+            </span>{" "}
             <span className="text-destructive">{p.error}</span>
           </span>
-        )
+        );
       }
       return (
         <span>
-          <span className="text-muted-foreground">{p.action} {p.target}:</span>{" "}
-          <span className="font-mono text-green-600 dark:text-green-400">{p.value}</span>
+          <span className="text-muted-foreground">
+            {p.action} {p.target}:
+          </span>{" "}
+          <span className="font-mono text-green-600 dark:text-green-400">
+            {p.value}
+          </span>
         </span>
-      )
+      );
     case "selftest_result":
       return (
         <span>
           <span className="text-muted-foreground">Selftest {p.sensor}:</span>{" "}
           {p.ok ? (
-            <span className="text-green-600 dark:text-green-400">{p.message}</span>
+            <span className="text-green-600 dark:text-green-400">
+              {p.message}
+            </span>
           ) : (
             <span className="text-destructive">{p.error}</span>
           )}
         </span>
-      )
+      );
     case "sensor_data":
       return (
         <span className="flex items-center gap-1">
@@ -66,40 +81,47 @@ function formatParsedMessage(msg: SerialMessage) {
             ({p.data ? Object.keys(p.data).join(", ") : "raw"})
           </span>
         </span>
-      )
+      );
     default:
-      if (p.action === "ping") return <span className="text-muted-foreground">Ping</span>
-      if (p.action === "reboot") return <span className="text-orange-500">Reboot</span>
-      if (p.action === "bootloader") return <span className="text-orange-500">Bootloader hook</span>
-      if (p.action === "factory_reset") return <span className="text-destructive">Factory reset</span>
-      if (p.action === "set_serial") return <span className="text-muted-foreground">Set serial</span>
+      if (p.action === "ping")
+        return <span className="text-muted-foreground">Ping</span>;
+      if (p.action === "reboot")
+        return <span className="text-orange-500">Reboot</span>;
+      if (p.action === "bootloader")
+        return <span className="text-orange-500">Bootloader hook</span>;
+      if (p.action === "factory_reset")
+        return <span className="text-destructive">Factory reset</span>;
+      if (p.action === "set_serial")
+        return <span className="text-muted-foreground">Set serial</span>;
       return (
         <span>
           <span className="text-muted-foreground">{p.action}</span>
-          {p.target && <span className="text-muted-foreground"> {p.target}</span>}
+          {p.target && (
+            <span className="text-muted-foreground"> {p.target}</span>
+          )}
         </span>
-      )
+      );
   }
 }
 
 export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
-  const [input, setInput] = useState("")
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages])
+  }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim() || disabled) return
-    onSend(input.trim())
-    setInput("")
-  }
+    if (!input.trim() || disabled) return;
+    onSend(input.trim());
+    setInput("");
+  };
 
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-card/50 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col border rounded-lg bg-card/50 overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold">Serial Monitor</span>
@@ -115,7 +137,10 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
               className={cn(
                 "flex items-start gap-1.5 rounded px-2 py-1",
                 msg.direction === "tx" && "bg-blue-500/5",
-                msg.direction === "rx" && msg.parsed?.type === "log" && msg.parsed.level === "error" && "bg-destructive/5"
+                msg.direction === "rx" &&
+                  msg.parsed?.type === "log" &&
+                  msg.parsed.level === "error" &&
+                  "bg-destructive/5",
               )}
             >
               <span className="mt-[2px] shrink-0">
@@ -126,9 +151,13 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
                 )}
               </span>
               <span className="text-[10px] text-muted-foreground/60 shrink-0 w-10 tabular-nums">
-                {new Date(msg.timestamp).toLocaleTimeString("en-US", { hour12: false })}
+                {new Date(msg.timestamp).toLocaleTimeString("en-US", {
+                  hour12: false,
+                })}
               </span>
-              <span className="leading-relaxed break-all">{formatParsedMessage(msg)}</span>
+              <span className="leading-relaxed break-all">
+                {formatParsedMessage(msg)}
+              </span>
             </div>
           ))}
           {messages.length === 0 && (
@@ -140,7 +169,9 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
       </ScrollArea>
       <div className="flex items-center gap-2 p-2 border-t bg-muted/30">
         <Input
-          placeholder={disabled ? "Unavailable while streaming..." : '{"action":"ping"}'}
+          placeholder={
+            disabled ? "Unavailable while streaming..." : '{"action":"ping"}'
+          }
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -158,5 +189,5 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
         </Button>
       </div>
     </div>
-  )
+  );
 }

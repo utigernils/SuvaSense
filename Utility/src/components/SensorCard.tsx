@@ -33,7 +33,7 @@ export function SensorCard({
   disabled,
 }: SensorCardProps) {
   return (
-    <Card className="relative h-full flex flex-col aspect-square">
+    <Card className="relative h-full flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

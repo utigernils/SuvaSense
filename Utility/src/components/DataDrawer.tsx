@@ -1,9 +1,6 @@
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -13,28 +10,42 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { SensorPayload } from "@/lib/types"
-import { ChevronDown } from "lucide-react"
+import { Table2 } from "lucide-react"
 
 interface DataDrawerProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   data: SensorPayload[]
+  streaming: boolean
+  onStreamingChange: (v: boolean) => void
+  streamingDisabled?: boolean
 }
 
-export function DataDrawer({ open, onOpenChange, data }: DataDrawerProps) {
+export function DataDrawer({
+  data,
+  streaming,
+  onStreamingChange,
+  streamingDisabled,
+}: DataDrawerProps) {
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[40vh]">
-        <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-sm font-semibold flex items-center gap-2">
-            <ChevronDown className="h-4 w-4" />
-            Stream Data
-            <span className="text-xs font-normal text-muted-foreground">
-              ({data.length} samples)
-            </span>
-          </DrawerTitle>
-        </DrawerHeader>
-        <div className="px-4 pb-4 overflow-auto">
+    <div className="flex h-full min-h-0 flex-col border rounded-lg bg-card/50 overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
+        <Table2 className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-semibold">Stream Data</span>
+        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+          {data.length}
+        </Badge>
+        <div className="ml-auto flex items-center gap-2">
+          <Switch
+            id="streaming"
+            checked={streaming}
+            onCheckedChange={onStreamingChange}
+            disabled={streamingDisabled}
+          />
+          <Label htmlFor="streaming" className="text-xs font-medium cursor-pointer">
+            Streaming
+          </Label>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 overflow-auto px-3 pb-3 pt-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -124,8 +135,7 @@ export function DataDrawer({ open, onOpenChange, data }: DataDrawerProps) {
               )}
             </TableBody>
           </Table>
-        </div>
-      </DrawerContent>
-    </Drawer>
+      </div>
+    </div>
   )
 }
