@@ -14,6 +14,45 @@ bool ESP32SystemSensor::begin() {
   return true;
 }
 
+SelfTestResult ESP32SystemSensor::selfTest() {
+  SelfTestResult result;
+  result.name = "ESP32System";
+
+  uint32_t freeHeap = ESP.getFreeHeap();
+  uint32_t heapSize = ESP.getHeapSize();
+  uint32_t flashSizeBytes = 0;
+  esp_flash_get_size(NULL, &flashSizeBytes);
+  float cpuTemp = temperatureRead();
+
+  String issues = "";
+
+  if (freeHeap < 4096) {
+    issues += "Low heap (" + String(freeHeap) + "B); ";
+  }
+
+  if (flashSizeBytes == 0) {
+    issues += "Flash size read failed; ";
+  }
+
+  if (cpuTemp > 85.0f) {
+    issues += "High CPU temp (" + String(cpuTemp, 1) + "C); ";
+  }
+
+  if (_mac[0] == '\0') {
+    issues += "MAC address not set; ";
+  }
+
+  if (issues.length() > 0) {
+    result.ok = false;
+    result.message = issues;
+  } else {
+    result.ok = true;
+    result.message = "OK - Heap=" + String(freeHeap) + "/" + String(heapSize) + "B Flash=" + String(flashSizeBytes / 1024) + "KB MAC=" + String(_mac) + " CPU=" + String(cpuTemp, 1) + "C";
+  }
+
+  return result;
+}
+
 ESP32SystemData ESP32SystemSensor::read() {
   ESP32SystemData data;
   memset(&data, 0, sizeof(data));

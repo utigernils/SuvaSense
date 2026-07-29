@@ -13,6 +13,15 @@ enum class SystemColor {
   RUNTIME
 };
 
+#ifndef HAL_SELFTEST_RESULT
+#define HAL_SELFTEST_RESULT
+struct SelfTestResult {
+  String name;
+  bool ok;
+  String message;
+};
+#endif
+
 class LEDController {
 public:
   bool begin();
@@ -25,11 +34,14 @@ public:
   void startupAnimation();
   void setBoth(CRGB color);
 
+  SelfTestResult selfTest();
+
 private:
   CRGB _leds[LED_COUNT];
   unsigned long _lastBeat;
   bool _beatState;
   SystemColor _systemColor;
+  bool _initialized = false;
 };
 
 #endif

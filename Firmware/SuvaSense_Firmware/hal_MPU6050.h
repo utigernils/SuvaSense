@@ -27,14 +27,25 @@ struct MPU6050Data {
   float angGyroZ;
 };
 
+#ifndef HAL_SELFTEST_RESULT
+#define HAL_SELFTEST_RESULT
+struct SelfTestResult {
+  String name;
+  bool ok;
+  String message;
+};
+#endif
+
 class MPU6050Sensor {
 public:
   MPU6050Sensor(TwoWire &wire = Wire);
   bool begin();
   MPU6050Data read();
+  SelfTestResult selfTest();
 
 private:
   MPU6050 _mpu;
+  TwoWire &_wire;
 };
 
 #endif
