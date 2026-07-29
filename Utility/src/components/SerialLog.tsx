@@ -1,11 +1,17 @@
-import { useRef, useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { SerialMessage } from "@/lib/types"
-import { ArrowUp, ArrowDown, Send, CheckCircle, Activity, FileJson } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {
+  ArrowUp,
+  ArrowDown,
+  Send,
+  CheckCircle,
+  Activity,
+  FileJson,
+} from "lucide-react"
 
 interface SerialLogProps {
   messages: SerialMessage[]
@@ -35,15 +41,21 @@ function formatParsedMessage(msg: SerialMessage) {
       if (p.error) {
         return (
           <span>
-            <span className="text-muted-foreground">{p.action} {p.target}:</span>{" "}
+            <span className="text-muted-foreground">
+              {p.action} {p.target}:
+            </span>{" "}
             <span className="text-destructive">{p.error}</span>
           </span>
         )
       }
       return (
         <span>
-          <span className="text-muted-foreground">{p.action} {p.target}:</span>{" "}
-          <span className="font-mono text-green-600 dark:text-green-400">{p.value}</span>
+          <span className="text-muted-foreground">
+            {p.action} {p.target}:
+          </span>{" "}
+          <span className="font-mono text-green-600 dark:text-green-400">
+            {p.value}
+          </span>
         </span>
       )
     case "selftest_result":
@@ -84,11 +96,11 @@ function formatParsedMessage(msg: SerialMessage) {
 
 export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
   const [input, setInput] = useState("")
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const scrollViewportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (scrollViewportRef.current) {
+      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight
     }
   }, [messages])
 
@@ -99,46 +111,55 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
   }
 
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-card/50 overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card/50">
+      <div className="flex items-center gap-2 border-b bg-muted/30 px-3 py-2">
         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold">Serial Monitor</span>
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-auto">
+        <Badge variant="secondary" className="ml-auto px-1.5 py-0 text-[10px]">
           {messages.length}
         </Badge>
       </div>
-      <ScrollArea className="flex-1 min-h-0">
-        <div ref={scrollRef} className="p-2 space-y-0.5 font-mono text-xs">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={cn(
-                "flex items-start gap-1.5 rounded px-2 py-1",
-                msg.direction === "tx" && "bg-blue-500/5",
-                msg.direction === "rx" && msg.parsed?.type === "log" && msg.parsed.level === "error" && "bg-destructive/5"
-              )}
-            >
-              <span className="mt-[2px] shrink-0">
-                {msg.direction === "tx" ? (
-                  <ArrowUp className="h-3 w-3 text-blue-500" />
-                ) : (
-                  <ArrowDown className="h-3 w-3 text-green-500" />
-                )}
-              </span>
-              <span className="text-[10px] text-muted-foreground/60 shrink-0 w-10 tabular-nums">
-                {new Date(msg.timestamp).toLocaleTimeString("en-US", { hour12: false })}
-              </span>
-              <span className="leading-relaxed break-all">{formatParsedMessage(msg)}</span>
-            </div>
-          ))}
+      <ScrollArea className="flex-1 min-h-0" viewportRef={scrollViewportRef}>
+        <div className="space-y-0.5 p-2 font-mono text-xs">
+          {messages.map((msg) => {
+            const rowClass =
+              msg.direction === "tx"
+                ? "bg-muted/60"
+                : msg.parsed?.type === "log" && msg.parsed.level === "error"
+                  ? "bg-destructive/5"
+                  : ""
+
+            return (
+              <div
+                key={msg.id}
+                className={`grid grid-cols-[1rem_4.75rem_minmax(0,1fr)] items-start gap-x-2 rounded px-2 py-1 ${rowClass}`}
+              >
+                <span className="mt-[2px] shrink-0">
+                  {msg.direction === "tx" ? (
+                    <ArrowUp className="h-3 w-3 text-orange-500" />
+                  ) : (
+                    <ArrowDown className="h-3 w-3 text-green-500" />
+                  )}
+                </span>
+                <span className="shrink-0 whitespace-nowrap tabular-nums text-[10px] text-muted-foreground/60">
+                  {new Date(msg.timestamp).toLocaleTimeString("en-US", {
+                    hour12: false,
+                  })}
+                </span>
+                <span className="min-w-0 break-all leading-relaxed">
+                  {formatParsedMessage(msg)}
+                </span>
+              </div>
+            )
+          })}
           {messages.length === 0 && (
-            <div className="text-xs text-muted-foreground p-4 text-center">
+            <div className="p-4 text-center text-xs text-muted-foreground">
               No messages yet. Connect to a device to see its serial output.
             </div>
           )}
         </div>
       </ScrollArea>
-      <div className="flex items-center gap-2 p-2 border-t bg-muted/30">
+      <div className="flex items-center gap-2 border-t bg-muted/30 p-2">
         <Input
           placeholder={disabled ? "Unavailable while streaming..." : '{"action":"ping"}'}
           value={input}

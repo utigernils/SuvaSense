@@ -1,37 +1,69 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Info } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
 
 interface SettingField {
-  key: string
-  label: string
-  type: "text" | "password" | "number" | "boolean" | "select"
-  value: string | number | boolean
-  description?: string
-  unit?: string
-  readOnly?: boolean
-  options?: { label: string; value: string }[]
+  key: string;
+  label: string;
+  type: "text" | "password" | "number" | "boolean" | "select";
+  value: string | number | boolean;
+  description?: string;
+  unit?: string;
+  readOnly?: boolean;
+  options?: { label: string; value: string }[];
 }
 
 interface SettingsGroupProps {
-  title: string
-  icon: React.ReactNode
-  fields: SettingField[]
-  onChange: (key: string, value: string | number | boolean) => void
-  disabled?: boolean
+  title: string;
+  icon: React.ReactNode;
+  fields: SettingField[];
+  onChange: (key: string, value: string | number | boolean) => void;
+  disabled?: boolean;
+  onSave?: () => void;
+  saveDisabled?: boolean;
 }
 
-export function SettingsGroup({ title, icon, fields, onChange, disabled }: SettingsGroupProps) {
+export function SettingsGroup({
+  title,
+  icon,
+  fields,
+  onChange,
+  disabled,
+  onSave,
+  saveDisabled,
+}: SettingsGroupProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           {icon}
           <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+          {onSave && (
+            <Button
+              size="sm"
+              onClick={onSave}
+              disabled={saveDisabled || disabled}
+              className="ml-auto h-7 text-xs"
+            >
+              Save Changes
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -54,7 +86,9 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
                 </TooltipProvider>
               )}
               {field.readOnly && (
-                <span className="text-[10px] text-muted-foreground ml-auto">read-only</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  read-only
+                </span>
               )}
             </div>
 
@@ -66,7 +100,10 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
                   onCheckedChange={(v) => onChange(field.key, v)}
                   disabled={disabled || field.readOnly}
                 />
-                <Label htmlFor={field.key} className="text-xs text-muted-foreground cursor-pointer">
+                <Label
+                  htmlFor={field.key}
+                  className="text-xs text-muted-foreground cursor-pointer"
+                >
                   {field.value ? "Enabled" : "Disabled"}
                 </Label>
               </div>
@@ -74,7 +111,7 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
               <Select
                 value={String(field.value)}
                 onValueChange={(v) => {
-                  if (v) onChange(field.key, v)
+                  if (v) onChange(field.key, v);
                 }}
                 disabled={disabled || field.readOnly}
               >
@@ -83,7 +120,11 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
                 </SelectTrigger>
                 <SelectContent>
                   {field.options.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -93,22 +134,34 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
               <div className="flex items-center gap-1.5">
                 <Input
                   id={field.key}
-                  type={field.type === "password" ? "password" : field.type === "number" ? "number" : "text"}
-                  value={field.readOnly && typeof field.value === "boolean" ? String(field.value) : field.value as string | number}
+                  type={
+                    field.type === "password"
+                      ? "password"
+                      : field.type === "number"
+                        ? "number"
+                        : "text"
+                  }
+                  value={
+                    field.readOnly && typeof field.value === "boolean"
+                      ? String(field.value)
+                      : (field.value as string | number)
+                  }
                   onChange={(e) => {
                     const val =
                       field.type === "number"
                         ? Number(e.target.value)
                         : field.type === "boolean"
                           ? e.target.value === "true"
-                          : e.target.value
-                    onChange(field.key, val)
+                          : e.target.value;
+                    onChange(field.key, val);
                   }}
                   disabled={disabled || field.readOnly}
                   className="h-8 text-xs font-mono"
                 />
                 {field.unit && (
-                  <span className="text-[10px] text-muted-foreground shrink-0">{field.unit}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {field.unit}
+                  </span>
                 )}
               </div>
             )}
@@ -116,5 +169,5 @@ export function SettingsGroup({ title, icon, fields, onChange, disabled }: Setti
         ))}
       </CardContent>
     </Card>
-  )
+  );
 }

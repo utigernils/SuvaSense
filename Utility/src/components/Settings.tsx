@@ -1,7 +1,6 @@
-import { useState } from "react"
-import { SettingsGroup } from "@/components/SettingsGroup"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react";
+import { SettingsGroup } from "@/components/SettingsGroup";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,22 +8,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import type { DeviceSettings } from "@/lib/types"
-import {
-  Wifi,
-  Radio,
-  Thermometer,
-  Lightbulb,
-  Cpu,
-  Trash2,
-} from "lucide-react"
+} from "@/components/ui/dialog";
+import type { DeviceSettings } from "@/lib/types";
+import { Wifi, Radio, Thermometer, Lightbulb, Trash2 } from "lucide-react";
 
 interface SettingsProps {
-  settings: DeviceSettings
-  deviceState: string
-  onSettingChange: (section: keyof DeviceSettings, key: string, value: string | number | boolean) => void
-  onFactoryReset: () => void
+  settings: DeviceSettings;
+  deviceState: string;
+  onSettingChange: (
+    section: keyof DeviceSettings,
+    key: string,
+    value: string | number | boolean,
+  ) => void;
+  onFactoryReset: () => void;
 }
 
 export function Settings({
@@ -33,218 +29,248 @@ export function Settings({
   onSettingChange,
   onFactoryReset,
 }: SettingsProps) {
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
-  const editable = deviceState === "bootloader"
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const editable = deviceState === "bootloader";
+  const [draftSettings, setDraftSettings] = useState(settings);
+
+  useEffect(() => {
+    setDraftSettings(settings);
+  }, [settings]);
+
+  const updateDraftSection = <T extends keyof DeviceSettings>(
+    section: T,
+    key: string,
+    value: string | number | boolean,
+  ) => {
+    setDraftSettings((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value,
+      },
+    }));
+  };
+
+  const saveSection = <T extends keyof DeviceSettings>(section: T) => {
+    const sectionSettings = draftSettings[section] as unknown as Record<
+      string,
+      string | number | boolean
+    >;
+    const currentSettings = settings[section] as unknown as Record<
+      string,
+      string | number | boolean
+    >;
+
+    Object.entries(sectionSettings).forEach(([key, value]) => {
+      if (currentSettings[key] !== value) {
+        onSettingChange(section, key, value);
+      }
+    });
+  };
 
   return (
     <div className="p-4">
+      <div className="mb-4 rounded-lg border bg-card/50 overflow-hidden">
+        <div className="flex items-center justify-between gap-4 px-5 py-3">
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight">
+              Factory Reset
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Wipes all settings but preserves serial number and factory flag.
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setResetConfirmOpen(true)}
+            disabled={!editable}
+            className="text-xs gap-1.5 shrink-0"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Factory Reset
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <SettingsGroup
           title="WiFi"
-          icon={<Wifi className="h-4 w-4 text-blue-400" />}
+          icon={<Wifi className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
               key: "ssid",
               label: "SSID",
               type: "text",
-              value: settings.wifi.ssid,
+              value: draftSettings.wifi.ssid,
               description: "WiFi network name the device connects to.",
             },
             {
               key: "wifi_password",
               label: "Password",
               type: "password",
-              value: settings.wifi.wifi_password,
-              description: "WiFi password. Stored in plaintext on device. Returned unmasked on GET.",
+              value: draftSettings.wifi.wifi_password,
+              description:
+                "WiFi password. Stored in plaintext on device. Returned unmasked on GET.",
             },
             {
               key: "hostname",
               label: "Hostname",
               type: "text",
-              value: settings.wifi.hostname,
-              description: "DHCP hostname. Defaults to suva-<serial> if not set.",
+              value: draftSettings.wifi.hostname,
+              description:
+                "DHCP hostname. Defaults to suva-<serial> if not set.",
             },
           ]}
-          onChange={(key, value) => onSettingChange("wifi", key, value)}
+          onChange={(key, value) => updateDraftSection("wifi", key, value)}
+          onSave={() => saveSection("wifi")}
+          saveDisabled={!editable}
         />
 
         <SettingsGroup
           title="MQTT"
-          icon={<Radio className="h-4 w-4 text-green-400" />}
+          icon={<Radio className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
               key: "broker",
               label: "Broker",
               type: "text",
-              value: settings.mqtt.broker,
+              value: draftSettings.mqtt.broker,
               description: "MQTT broker IP address or hostname.",
             },
             {
               key: "port",
               label: "Port",
               type: "number",
-              value: settings.mqtt.port,
+              value: draftSettings.mqtt.port,
               description: "MQTT broker port. Default: 1883.",
             },
             {
               key: "client_id",
               label: "Client ID",
               type: "text",
-              value: settings.mqtt.client_id,
+              value: draftSettings.mqtt.client_id,
               description: "MQTT client identifier. Defaults to serial number.",
             },
             {
               key: "mqtt_username",
               label: "Username",
               type: "text",
-              value: settings.mqtt.mqtt_username,
+              value: draftSettings.mqtt.mqtt_username,
               description: "MQTT username. Optional — leave blank if unused.",
             },
             {
               key: "mqtt_password",
               label: "Password",
               type: "password",
-              value: settings.mqtt.mqtt_password,
-              description: "MQTT password. Optional. Stored in plaintext on device.",
+              value: draftSettings.mqtt.mqtt_password,
+              description:
+                "MQTT password. Optional. Stored in plaintext on device.",
             },
             {
               key: "topic_prefix",
               label: "Topic Prefix",
               type: "text",
-              value: settings.mqtt.topic_prefix,
+              value: draftSettings.mqtt.topic_prefix,
               description: "MQTT topic prefix. Defaults to suva/<serial>/.",
             },
             {
               key: "keep_alive",
               label: "Keep Alive",
               type: "number",
-              value: settings.mqtt.keep_alive,
+              value: draftSettings.mqtt.keep_alive,
               unit: "s",
               description: "MQTT keepalive interval in seconds. Default: 60.",
             },
           ]}
-          onChange={(key, value) => onSettingChange("mqtt", key, value)}
+          onChange={(key, value) => updateDraftSection("mqtt", key, value)}
+          onSave={() => saveSection("mqtt")}
+          saveDisabled={!editable}
         />
 
         <SettingsGroup
           title="Sensors"
-          icon={<Thermometer className="h-4 w-4 text-orange-400" />}
+          icon={<Thermometer className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
               key: "publish_interval",
               label: "Publish Interval",
               type: "number",
-              value: settings.sensors.publish_interval,
+              value: draftSettings.sensors.publish_interval,
               unit: "ms",
-              description: "How often sensor data is published via MQTT. Default: 10000.",
+              description:
+                "How often sensor data is published via MQTT. Default: 10000.",
             },
             {
               key: "mpu_en",
               label: "MPU6050",
               type: "boolean",
-              value: settings.sensors.mpu_en,
+              value: draftSettings.sensors.mpu_en,
               description: "Enable accelerometer/gyroscope sensor.",
             },
             {
               key: "veml_en",
               label: "VEML7700",
               type: "boolean",
-              value: settings.sensors.veml_en,
+              value: draftSettings.sensors.veml_en,
               description: "Enable ambient light sensor.",
             },
             {
               key: "bme_en",
               label: "BME680",
               type: "boolean",
-              value: settings.sensors.bme_en,
+              value: draftSettings.sensors.bme_en,
               description: "Enable temperature/humidity/pressure/gas sensor.",
             },
             {
               key: "sys_telem",
               label: "System Telemetry",
               type: "boolean",
-              value: settings.sensors.sys_telem,
+              value: draftSettings.sensors.sys_telem,
               description: "Include system telemetry in MQTT payloads.",
             },
           ]}
-          onChange={(key, value) => onSettingChange("sensors", key, value)}
+          onChange={(key, value) => updateDraftSection("sensors", key, value)}
+          onSave={() => saveSection("sensors")}
+          saveDisabled={!editable}
         />
 
         <SettingsGroup
           title="LED"
-          icon={<Lightbulb className="h-4 w-4 text-yellow-400" />}
+          icon={<Lightbulb className="h-4 w-4 text-muted-foreground" />}
           disabled={!editable}
           fields={[
             {
               key: "brightness",
               label: "Brightness",
               type: "number",
-              value: settings.led.brightness,
-              description: "LED brightness level, range 0–255. Default: 32. Note: not applied at runtime yet.",
+              value: draftSettings.led.brightness,
+              description:
+                "LED brightness level, range 0–255. Default: 32. Note: not applied at runtime yet.",
             },
             {
               key: "user_led",
               label: "User LED",
               type: "boolean",
-              value: settings.led.user_led,
-              description: "Enable the user LED (LED 1) for connection and activity indicators.",
+              value: draftSettings.led.user_led,
+              description:
+                "Enable the user LED (LED 1) for connection and activity indicators.",
             },
             {
               key: "sys_led",
               label: "System LED",
               type: "boolean",
-              value: settings.led.sys_led,
+              value: draftSettings.led.sys_led,
               description: "Enable the system LED (LED 0) for state heartbeat.",
             },
           ]}
-          onChange={(key, value) => onSettingChange("led", key, value)}
+          onChange={(key, value) => updateDraftSection("led", key, value)}
+          onSave={() => saveSection("led")}
+          saveDisabled={!editable}
         />
-
-        <Card className="col-span-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-semibold">System Info</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-x-6 gap-y-2">
-              <div>
-                <span className="text-[11px] text-muted-foreground">Serial Number</span>
-                <p className="text-sm font-mono font-medium">{settings.system.serial_num || "—"}</p>
-              </div>
-              <div>
-                <span className="text-[11px] text-muted-foreground">Boot Count</span>
-                <p className="text-sm font-mono font-medium">{settings.system.boot_count}</p>
-              </div>
-              <div>
-                <span className="text-[11px] text-muted-foreground">Factory Setup</span>
-                <p className="text-sm font-mono font-medium">
-                  {settings.system.factory_done ? "Complete" : "Pending"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="col-span-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setResetConfirmOpen(true)}
-            disabled={!editable}
-            className="text-xs gap-1.5"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Factory Reset
-          </Button>
-          <span className="text-[11px] text-muted-foreground ml-3">
-            Wipes all settings but preserves serial number and factory flag.
-          </span>
-        </div>
       </div>
 
       <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
@@ -252,19 +278,23 @@ export function Settings({
           <DialogHeader>
             <DialogTitle>Factory Reset</DialogTitle>
             <DialogDescription>
-              This will reset all WiFi, MQTT, sensor, and LED settings to their defaults.
-              The serial number and factory flag will be preserved. The device will reboot after the reset.
+              This will reset all WiFi, MQTT, sensor, and LED settings to their
+              defaults. The serial number and factory flag will be preserved.
+              The device will reboot after the reset.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResetConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setResetConfirmOpen(false)}
+            >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={() => {
-                onFactoryReset()
-                setResetConfirmOpen(false)
+                onFactoryReset();
+                setResetConfirmOpen(false);
               }}
             >
               Reset
@@ -273,5 +303,5 @@ export function Settings({
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
