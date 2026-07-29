@@ -1,13 +1,50 @@
 #include "hal_MPU6050.h"
+#include <Wire.h>
+
+#define MPU6050_I2C_ADDR 0x68
 
 MPU6050Sensor::MPU6050Sensor(TwoWire &wire)
-  : _mpu(wire) {
+  : _mpu(wire), _wire(wire) {
 }
 
 bool MPU6050Sensor::begin() {
   _mpu.Initialize();
   _mpu.Calibrate();
   return true;
+}
+
+SelfTestResult MPU6050Sensor::selfTest() {
+  SelfTestResult result;
+  result.name = "MPU6050";
+
+  _wire.beginTransmission(MPU6050_I2C_ADDR);
+  if (_wire.endTransmission() != 0) {
+    result.ok = false;
+    result.message = "I2C probe failed at 0x" + String(MPU6050_I2C_ADDR, HEX) + " - sensor not found";
+    return result;
+  }
+
+  _mpu.Initialize();
+  _mpu.Calibrate();
+  _mpu.Execute();
+
+  float accX = _mpu.GetAccX();
+  float accY = _mpu.GetAccY();
+  float accZ = _mpu.GetAccZ();
+  float gyroX = _mpu.GetGyroX();
+  float gyroY = _mpu.GetGyroY();
+  float gyroZ = _mpu.GetGyroZ();
+
+  if (accX == 0.0f && accY == 0.0f && accZ == 0.0f &&
+      gyroX == 0.0f && gyroY == 0.0f && gyroZ == 0.0f) {
+    result.ok = false;
+    result.message = "I2C OK but all readings are zero - sensor may be faulty";
+    return result;
+  }
+
+  result.ok = true;
+  result.message = "OK - ACC(" + String(accX, 2) + "," + String(accY, 2) + "," + String(accZ, 2) + ") GYR(" + String(gyroX, 2) + "," + String(gyroY, 2) + "," + String(gyroZ, 2) + ")";
+  return result;
 }
 
 MPU6050Data MPU6050Sensor::read() {
