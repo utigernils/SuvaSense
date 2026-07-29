@@ -36,6 +36,27 @@ export function Settings({
 
   return (
     <div className="p-4">
+      <div className="mb-4 rounded-lg border bg-card/50 overflow-hidden">
+        <div className="flex items-center justify-between gap-4 px-5 py-3">
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight">Factory Reset</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Wipes all settings but preserves serial number and factory flag.
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setResetConfirmOpen(true)}
+            disabled={!editable}
+            className="text-xs gap-1.5 shrink-0"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Factory Reset
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <SettingsGroup
           title="WiFi"
@@ -200,22 +221,6 @@ export function Settings({
           ]}
           onChange={(key, value) => onSettingChange("led", key, value)}
         />
-
-        <div className="col-span-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setResetConfirmOpen(true)}
-            disabled={!editable}
-            className="text-xs gap-1.5"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Factory Reset
-          </Button>
-          <span className="text-[11px] text-muted-foreground ml-3">
-            Wipes all settings but preserves serial number and factory flag.
-          </span>
-        </div>
       </div>
 
       <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
