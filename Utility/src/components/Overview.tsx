@@ -80,7 +80,7 @@ export function Overview({
 
   return (
     <div className="flex h-full flex-1 min-h-0 flex-col">
-      <div className="flex-1 min-h-0 overflow-hidden p-4 pb-3">
+      <div className="flex-1 min-h-0 p-4 pb-3">
         <div className="grid h-full min-h-0 grid-cols-2 grid-rows-2 gap-5">
           <SensorCard
             title="System"

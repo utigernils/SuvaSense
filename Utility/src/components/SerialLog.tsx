@@ -110,7 +110,8 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
 
   useEffect(() => {
     if (scrollViewportRef.current) {
-      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
+      scrollViewportRef.current.scrollTop =
+        scrollViewportRef.current.scrollHeight;
     }
   }, [messages]);
 
