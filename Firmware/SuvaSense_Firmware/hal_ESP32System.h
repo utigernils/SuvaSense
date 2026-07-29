@@ -19,10 +19,20 @@ struct ESP32SystemData {
   uint8_t resetReason;
 };
 
+#ifndef HAL_SELFTEST_RESULT
+#define HAL_SELFTEST_RESULT
+struct SelfTestResult {
+  String name;
+  bool ok;
+  String message;
+};
+#endif
+
 class ESP32SystemSensor {
 public:
   bool begin();
   ESP32SystemData read();
+  SelfTestResult selfTest();
 
 private:
   char _mac[18];
