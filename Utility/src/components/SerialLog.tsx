@@ -106,11 +106,11 @@ function formatParsedMessage(msg: SerialMessage) {
 
 export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
   const [input, setInput] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollViewportRef.current) {
+      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -129,13 +129,13 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
           {messages.length}
         </Badge>
       </div>
-      <ScrollArea className="flex-1 min-h-0">
-        <div ref={scrollRef} className="p-2 space-y-0.5 font-mono text-xs">
+      <ScrollArea className="flex-1 min-h-0" viewportRef={scrollViewportRef}>
+        <div className="p-2 space-y-0.5 font-mono text-xs">
           {messages.map((msg) => (
             <div
               key={msg.id}
               className={cn(
-                "flex items-start gap-1.5 rounded px-2 py-1",
+                "grid grid-cols-[1rem_4.75rem_minmax(0,1fr)] items-start gap-x-2 rounded px-2 py-1",
                 msg.direction === "tx" && "bg-blue-500/5",
                 msg.direction === "rx" &&
                   msg.parsed?.type === "log" &&
@@ -150,12 +150,12 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
                   <ArrowDown className="h-3 w-3 text-green-500" />
                 )}
               </span>
-              <span className="text-[10px] text-muted-foreground/60 shrink-0 w-10 tabular-nums">
+              <span className="text-[10px] text-muted-foreground/60 shrink-0 whitespace-nowrap tabular-nums">
                 {new Date(msg.timestamp).toLocaleTimeString("en-US", {
                   hour12: false,
                 })}
               </span>
-              <span className="leading-relaxed break-all">
+              <span className="min-w-0 leading-relaxed break-all">
                 {formatParsedMessage(msg)}
               </span>
             </div>
