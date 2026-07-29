@@ -31,6 +31,15 @@ Success includes `value`, failure includes `error`.
 ```
 Raw sensor JSON lines sent continuously during streaming mode. Each sensor object is only included if the sensor is enabled and initialized.
 
+### Selftest Result (bootloader only)
+```json
+{"type":"selftest_result","ok":true,"sensor":"BME680","message":"OK - T=23.5C H=54.2% P=1013.2hPa"}
+```
+```json
+{"type":"selftest_result","ok":false,"sensor":"MPU6050","error":"I2C probe failed at 0x68 - sensor not found"}
+```
+Sent after a `selftest` command completes. Includes `ok` (boolean), `sensor` (name), and either `message` (on success) or `error` (on failure).
+
 ---
 
 ## Host → ESP (incoming)
@@ -67,6 +76,7 @@ Entered by sending `{"action":"bootloader"}` during the 5-second post-boot windo
 | `{"action":"factory_reset"}` | — | — | Clears all settings except serial + factory_done, then reboots |
 | `{"action":"stream","target":"start"}` | `start` | — | Begin continuous sensor JSON output to serial |
 | `{"action":"stream","target":"stop"}` | `stop` | — | Stop sensor streaming |
+| `{"action":"selftest","target":"..."}` | *(see table below)* | — | Run a self-test on a sensor → `{"type":"selftest_result",...}` |
 | `{"action":"get","target":"..."}` | *(see table below)* | — | Read a stored setting |
 | `{"action":"set","target":"...","value":"..."}` | *(see table below)* | string | Write a stored setting |
 
@@ -130,6 +140,18 @@ Entered automatically after the 5-second bootloader window expires (if no `{"act
 
 Boolean values accept `"true"` / `"false"` or `"1"` / `"0"`.
 
+### Selftest Targets
+
+| Target | Aliases | Description |
+|---|---|---|
+| `bme680` | `bme` | Temperature / humidity / pressure / gas sensor |
+| `mpu6050` | `mpu` | Accelerometer / gyroscope |
+| `veml7700` | `veml` | Ambient light sensor |
+| `esp32` | `system` | ESP32 system telemetry (heap, flash, CPU temp, MAC) |
+| `led` | — | WS2813 RGB LED strip |
+
+Each selftest performs an I2C bus probe (where applicable), reads the sensor, and validates the data. An info log is emitted immediately when the test is triggered, followed by a `selftest_result` message when complete.
+
 ---
 
 ## Examples
@@ -163,6 +185,21 @@ Boolean values accept `"true"` / `"false"` or `"1"` / `"0"`.
 
 → {"action":"get","target":"boot_count"}
 ← {"type":"response","action":"get","target":"boot_count","value":"42"}
+```
+
+### Sensor Diagnostics
+```
+→ {"action":"selftest","target":"bme"}
+← {"type":"log","level":"info","message":"Selftest triggered for: bme"}
+← {"type":"selftest_result","ok":true,"sensor":"BME680","message":"OK - T=23.5C H=54.2% P=1013.2hPa"}
+
+→ {"action":"selftest","target":"mpu"}
+← {"type":"log","level":"info","message":"Selftest triggered for: mpu"}
+← {"type":"selftest_result","ok":false,"sensor":"MPU6050","error":"I2C probe failed at 0x68 - sensor not found"}
+
+→ {"action":"selftest","target":"led"}
+← {"type":"log","level":"info","message":"Selftest triggered for: led"}
+← {"type":"selftest_result","ok":true,"sensor":"LED","message":"OK - 2x WS2813 on pin D2"}
 ```
 
 ---

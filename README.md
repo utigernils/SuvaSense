@@ -100,6 +100,7 @@ All commands are JSON lines sent at 115200 baud. `target` and `value` are option
 | `{"action":"factory_reset"}` | Wipe all settings, keep serial number |
 | `{"action":"stream","target":"start"}` | Stream live sensor data to serial |
 | `{"action":"stream","target":"stop"}` | Stop streaming |
+| `{"action":"selftest","target":"bme680"}` | Run self-test on a sensor (see targets below) |
 | `{"action":"get","target":"ssid"}` | Read a setting |
 | `{"action":"set","target":"ssid","value":"MyWiFi"}` | Write a setting |
 
@@ -139,6 +140,22 @@ All commands are JSON lines sent at 115200 baud. `target` and `value` are option
 | `factory_done` | bool | — | Factory done flag (read-only) |
 
 Booleans accept `"true"` / `"false"` or `"1"` / `"0"`.
+
+### Selftest Targets
+
+| Target | Aliases | What it tests |
+|---|---|---|
+| `bme680` | `bme` | I2C probe, read temperature/humidity/pressure |
+| `mpu6050` | `mpu` | I2C probe, read accelerometer/gyroscope |
+| `veml7700` | `veml` | I2C probe, read lux/white values |
+| `esp32` | `system` | Heap, flash, CPU temperature, MAC address |
+| `led` | — | LED strip flash test |
+
+Example:
+```
+{"action":"selftest","target":"bme680"}
+```
+The device immediately responds with `Selftest triggered` and then with the result containing `ok`, sensor name, and message/error details.
 
 ---
 
