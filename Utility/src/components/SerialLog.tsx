@@ -11,12 +11,14 @@ import {
   CheckCircle,
   Activity,
   FileJson,
+  Eraser,
 } from "lucide-react"
 
 interface SerialLogProps {
   messages: SerialMessage[]
   disabled?: boolean
   onSend: (message: string) => void
+  onClear: () => void
 }
 
 function formatParsedMessage(msg: SerialMessage) {
@@ -85,6 +87,13 @@ function formatParsedMessage(msg: SerialMessage) {
       if (p.action === "bootloader") return <span className="text-orange-500">Bootloader hook</span>
       if (p.action === "factory_reset") return <span className="text-destructive">Factory reset</span>
       if (p.action === "set_serial") return <span className="text-muted-foreground">Set serial</span>
+
+      if (!p.action && !p.target) {
+        const raw = msg.raw.trim()
+        if (!raw) return null
+        return <span className="text-muted-foreground">{raw}</span>
+      }
+
       return (
         <span>
           <span className="text-muted-foreground">{p.action}</span>
@@ -94,7 +103,7 @@ function formatParsedMessage(msg: SerialMessage) {
   }
 }
 
-export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
+export function SerialLog({ messages, disabled, onSend, onClear }: SerialLogProps) {
   const [input, setInput] = useState("")
   const scrollViewportRef = useRef<HTMLDivElement>(null)
 
@@ -115,13 +124,26 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
       <div className="flex items-center gap-2 border-b bg-muted/30 px-3 py-2">
         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold">Serial Monitor</span>
-        <Badge variant="secondary" className="ml-auto px-1.5 py-0 text-[10px]">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClear}
+          disabled={messages.length === 0}
+          className="ml-auto h-6 px-2 text-[10px]"
+        >
+          <Eraser className="h-3 w-3" />
+          Clear
+        </Button>
+        <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
           {messages.length}
         </Badge>
       </div>
       <ScrollArea className="flex-1 min-h-0" viewportRef={scrollViewportRef}>
         <div className="space-y-0.5 p-2 font-mono text-xs">
           {messages.map((msg) => {
+            const formatted = formatParsedMessage(msg)
+            if (!formatted) return null
+
             const rowClass =
               msg.direction === "tx"
                 ? "bg-muted/60"
@@ -147,7 +169,7 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
                   })}
                 </span>
                 <span className="min-w-0 break-all leading-relaxed">
-                  {formatParsedMessage(msg)}
+                  {formatted}
                 </span>
               </div>
             )

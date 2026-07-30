@@ -9,11 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { DeviceSettings } from "@/lib/types";
+import type { ConnectionState, DeviceSettings } from "@/lib/types";
 import { Wifi, Radio, Thermometer, Lightbulb, Trash2 } from "lucide-react";
 
 interface SettingsProps {
   settings: DeviceSettings;
+  connectionState: ConnectionState;
   deviceState: string;
   onSettingChange: (
     section: keyof DeviceSettings,
@@ -25,12 +26,14 @@ interface SettingsProps {
 
 export function Settings({
   settings,
+  connectionState,
   deviceState,
   onSettingChange,
   onFactoryReset,
 }: SettingsProps) {
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const editable = deviceState === "bootloader";
+  const connected = connectionState === "connected";
   const [draftSettings, setDraftSettings] = useState(settings);
 
   useEffect(() => {
@@ -70,6 +73,14 @@ export function Settings({
 
   return (
     <div className="p-4">
+      {!connected ? (
+        <div className="mb-4 rounded-lg border border-dashed bg-card/30 px-4 py-3 text-sm text-muted-foreground">
+          No device connected. Connect over serial to view or edit settings.
+        </div>
+      ) : null}
+
+      {!connected ? null : (
+        <>
       <div className="mb-4 rounded-lg border bg-card/50 overflow-hidden">
         <div className="flex items-center justify-between gap-4 px-5 py-3">
           <div>
@@ -302,6 +313,8 @@ export function Settings({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </div>
   );
 }

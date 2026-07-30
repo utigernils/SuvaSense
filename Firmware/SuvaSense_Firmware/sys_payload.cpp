@@ -22,6 +22,26 @@ static bool _bmeOk = false;
 static bool _sysOk = false;
 static bool _initialized = false;
 
+static void _ensureMpuReadyForSelftest() {
+  if (_mpuOk) return;
+  _mpuOk = mpuSensor.begin();
+}
+
+static void _ensureVemlReadyForSelftest() {
+  if (_vemlOk) return;
+  _vemlOk = vemlSensor.begin();
+}
+
+static void _ensureBmeReadyForSelftest() {
+  if (_bmeOk) return;
+  _bmeOk = bmeSensor.begin();
+}
+
+static void _ensureSystemReadyForSelftest() {
+  if (_sysOk) return;
+  _sysOk = sysSensor.begin();
+}
+
 static void _buildDoc(JsonDocument& doc) {
   if (_mpuOk && StorageSensors::isMPU6050Enabled()) {
     MPU6050Data d = mpuSensor.read();
@@ -107,19 +127,19 @@ void Payload::writeToSerial() {
 }
 
 String Payload::selfTest(const String& sensorName) {
-  if (!_initialized) {
-    Payload::setup();
-  }
-
   SelfTestResult result;
 
   if (sensorName == "bme680" || sensorName == "bme") {
+    _ensureBmeReadyForSelftest();
     result = bmeSensor.selfTest();
   } else if (sensorName == "mpu6050" || sensorName == "mpu") {
+    _ensureMpuReadyForSelftest();
     result = mpuSensor.selfTest();
   } else if (sensorName == "veml7700" || sensorName == "veml") {
+    _ensureVemlReadyForSelftest();
     result = vemlSensor.selfTest();
   } else if (sensorName == "esp32" || sensorName == "system") {
+    _ensureSystemReadyForSelftest();
     result = sysSensor.selfTest();
   } else if (sensorName == "led") {
     result = leds.selfTest();

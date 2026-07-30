@@ -17,7 +17,9 @@ static void handleGet(const String& target);
 static void handleSet(const String& target, const String& value);
 
 void Bootloader::setup() {
-  leds.setSystemColor(SystemColor::BOOTLOADER);
+  leds.setSystemMode(SystemMode::BOOTLOADER);
+  leds.setUserLatch(UserLatch::NONE);
+  _streaming = false;
   SerialJSON::sendInfo("Bootloader mode active");
 }
 
@@ -29,7 +31,7 @@ void Bootloader::loop() {
     if (cmd.valid && cmd.action == "stream" && cmd.target == "stop") {
       _streaming = false;
       SerialJSON::sendInfo("Streaming stopped");
-      leds.setUserColor(CRGB::Black);
+      leds.setUserLatch(UserLatch::NONE);
     }
     return;
   }
@@ -68,11 +70,11 @@ void Bootloader::loop() {
       Payload::setup();
       _streaming = true;
       SerialJSON::sendInfo("Streaming started");
-      leds.setUserColor(CRGB::Blue);
+      leds.setUserLatch(UserLatch::STREAMING);
     } else if (cmd.target == "stop") {
       _streaming = false;
       SerialJSON::sendInfo("Streaming stopped");
-      leds.setUserColor(CRGB::Black);
+      leds.setUserLatch(UserLatch::NONE);
     } else {
       SerialJSON::sendResponse("stream", cmd.target, "unknown target", false);
     }

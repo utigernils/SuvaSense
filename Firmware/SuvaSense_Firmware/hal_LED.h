@@ -13,6 +13,27 @@ enum class SystemColor {
   RUNTIME
 };
 
+enum class SystemMode {
+  FACTORY,
+  BOOT_WINDOW,
+  BOOTLOADER,
+  RUNTIME_INIT,
+  RUNTIME,
+};
+
+enum class UserLatch {
+  NONE,
+  STREAMING,
+};
+
+enum class UserEvent {
+  WIFI_CONNECTED,
+  WIFI_DISCONNECTED,
+  MQTT_LINK_UP,
+  MQTT_LINK_DOWN,
+  PUBLISH,
+};
+
 #ifndef HAL_SELFTEST_RESULT
 #define HAL_SELFTEST_RESULT
 struct SelfTestResult {
@@ -26,6 +47,10 @@ class LEDController {
 public:
   bool begin();
   void update();
+
+  void setSystemMode(SystemMode mode);
+  void setUserLatch(UserLatch latch);
+  void triggerUserEvent(UserEvent event);
 
   void setSystemColor(SystemColor color);
   void setUserColor(CRGB color);
@@ -41,6 +66,14 @@ private:
   unsigned long _lastBeat;
   bool _beatState;
   SystemColor _systemColor;
+  SystemMode _systemMode;
+  UserLatch _userLatch = UserLatch::NONE;
+  bool _userEventActive = false;
+  bool _userEventOn = false;
+  uint8_t _userEventTogglesRemaining = 0;
+  unsigned long _userEventLastToggle = 0;
+  unsigned long _userEventInterval = 100;
+  CRGB _userEventColor = CRGB::Black;
   bool _initialized = false;
 };
 

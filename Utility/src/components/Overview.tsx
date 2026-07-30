@@ -2,6 +2,7 @@ import { SensorCard } from "@/components/SensorCard";
 import { SerialLog } from "@/components/SerialLog";
 import { DataDrawer } from "@/components/DataDrawer";
 import type {
+  ConnectionState,
   DeviceState,
   SensorPayload,
   SelftestState,
@@ -14,6 +15,7 @@ import type {
 import { Wind, Rotate3d, Sun, Cpu } from "lucide-react";
 
 interface OverviewProps {
+  connectionState: ConnectionState;
   deviceState: DeviceState;
   streaming: boolean;
   onStreamingChange: (v: boolean) => void;
@@ -22,7 +24,9 @@ interface OverviewProps {
   onSelftest: (sensor: string) => void;
   serialLogs: SerialMessage[];
   onSerialSend: (msg: string) => void;
+  onSerialClear: () => void;
   streamData: SensorPayload[];
+  onStreamDataClear: () => void;
 }
 
 function formatBME680(data: BME680Data) {
@@ -65,6 +69,7 @@ function formatSystem(data: SystemTelemetry) {
 }
 
 export function Overview({
+  connectionState,
   deviceState,
   streaming,
   onStreamingChange,
@@ -73,10 +78,21 @@ export function Overview({
   onSelftest,
   serialLogs,
   onSerialSend,
+  onSerialClear,
   streamData,
+  onStreamDataClear,
 }: OverviewProps) {
   const bootloaderActive = deviceState === "bootloader";
   const controlsDisabled = !bootloaderActive || streaming;
+
+  const noDataReason =
+    connectionState !== "connected"
+      ? "No device connected over serial."
+      : !bootloaderActive
+        ? "Telemetry is only available in bootloader stream mode."
+        : !streaming
+          ? "Streaming is stopped. Start stream in the Data Stream panel."
+          : "Waiting for the first sensor frame from the device.";
 
   return (
     <div className="flex h-full flex-1 min-h-0 flex-col">
@@ -87,6 +103,7 @@ export function Overview({
             icon={<Cpu className="h-4 w-4" />}
             description="ESP32 system telemetry: uptime, CPU temperature, free heap memory, and WiFi signal strength."
             values={payload.system ? formatSystem(payload.system) : []}
+            noDataReason={noDataReason}
             selftestResult={selftest.esp32}
             onSelftest={() => onSelftest("esp32")}
             disabled={controlsDisabled}
@@ -97,6 +114,7 @@ export function Overview({
             i2cAddress="0x77"
             description="Temperature, humidity, pressure, and gas sensor. Connected via I2C at address 0x77."
             values={payload.bme680 ? formatBME680(payload.bme680) : []}
+            noDataReason={noDataReason}
             selftestResult={selftest.bme680}
             onSelftest={() => onSelftest("bme680")}
             disabled={controlsDisabled}
@@ -107,6 +125,7 @@ export function Overview({
             i2cAddress="0x10"
             description="Ambient light sensor. Connected via I2C at address 0x10."
             values={payload.veml7700 ? formatVEML7700(payload.veml7700) : []}
+            noDataReason={noDataReason}
             selftestResult={selftest.veml7700}
             onSelftest={() => onSelftest("veml7700")}
             disabled={controlsDisabled}
@@ -117,6 +136,7 @@ export function Overview({
             i2cAddress="0x68"
             description="6-axis accelerometer and gyroscope. Connected via I2C at address 0x68."
             values={payload.mpu6050 ? formatMPU6050(payload.mpu6050) : []}
+            noDataReason={noDataReason}
             selftestResult={selftest.mpu6050}
             onSelftest={() => onSelftest("mpu6050")}
             disabled={controlsDisabled}
@@ -130,6 +150,7 @@ export function Overview({
             messages={serialLogs}
             disabled={streaming}
             onSend={onSerialSend}
+            onClear={onSerialClear}
           />
         </div>
         <div className="min-h-0">
@@ -138,6 +159,7 @@ export function Overview({
             streaming={streaming}
             onStreamingChange={onStreamingChange}
             streamingDisabled={!bootloaderActive}
+            onClear={onStreamDataClear}
           />
         </div>
       </div>
