@@ -122,6 +122,7 @@ function App() {
     setAutoHook,
     setDeviceState,
     setMessages,
+    resetTransientState,
   } = useSerial()
 
   const [page, setPage] = useState<"overview" | "settings">("overview")
@@ -155,8 +156,14 @@ function App() {
   }, [sendCommand])
 
   const handleReboot = useCallback(() => {
+    setStreaming(false)
+    setStreamData([])
+    setSettings(initialSettings)
+    setMessages([])
+    resetTransientState()
+    setDeviceState("runtime")
     sendCommand(Commands.reboot())
-  }, [sendCommand])
+  }, [resetTransientState, sendCommand, setDeviceState, setMessages])
 
   const handleSetSerial = useCallback(
     (serial: string) => {
