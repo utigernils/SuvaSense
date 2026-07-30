@@ -1,6 +1,15 @@
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -39,7 +48,28 @@ export function SensorCard({
   onSelftest,
   disabled,
 }: SensorCardProps) {
+  const [resultModalOpen, setResultModalOpen] = useState(false);
+  const lastShownSignatureRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!selftestResult) return;
+
+    const signature = [
+      title,
+      selftestResult.ok ? "ok" : "fail",
+      selftestResult.sensor,
+      selftestResult.message ?? "",
+      selftestResult.error ?? "",
+    ].join("|");
+
+    if (signature === lastShownSignatureRef.current) return;
+
+    lastShownSignatureRef.current = signature;
+    setResultModalOpen(true);
+  }, [selftestResult, title]);
+
   return (
+    <>
     <Card className="relative h-full flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -65,16 +95,40 @@ export function SensorCard({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSelftest}
-            disabled={disabled}
-            className="text-xs gap-1 h-7"
-          >
-            <FlaskConical className="h-3 w-3" />
-            Selftest
-          </Button>
+          <div className="flex items-center gap-2">
+            {selftestResult ? (
+              <button
+                type="button"
+                onClick={() => setResultModalOpen(true)}
+                className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] transition-colors hover:bg-muted/50 ${
+                  selftestResult.ok
+                    ? "border-green-500/40 text-green-600 dark:text-green-400"
+                    : "border-destructive/40 text-destructive"
+                }`}
+                aria-label={`Open last ${title} selftest result`}
+              >
+                {selftestResult.ok ? (
+                  <CheckCircle className="h-3 w-3" />
+                ) : (
+                  <XCircle className="h-3 w-3" />
+                )}
+                {selftestResult.ok ? "Last: OK" : "Last: Failed"}
+              </button>
+            ) : (
+              <span className="text-[10px] text-muted-foreground">No selftest yet</span>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSelftest}
+              disabled={disabled}
+              className="text-xs gap-1 h-7"
+            >
+              <FlaskConical className="h-3 w-3" />
+              Selftest
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
@@ -102,27 +156,51 @@ export function SensorCard({
             </span>
           </div>
         )}
-        {selftestResult && (
-          <div
-            className={`mt-3 flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs ${
-              selftestResult.ok
-                ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                : "bg-destructive/10 text-destructive"
-            }`}
-          >
-            {selftestResult.ok ? (
-              <CheckCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            ) : (
-              <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            )}
-            <span>
-              {selftestResult.ok
-                ? selftestResult.message
-                : selftestResult.error}
-            </span>
-          </div>
-        )}
       </CardContent>
     </Card>
+
+      <Dialog open={resultModalOpen} onOpenChange={setResultModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{title} selftest result</DialogTitle>
+            <DialogDescription>
+              {selftestResult
+                ? selftestResult.ok
+                  ? "Selftest completed successfully."
+                  : "Selftest failed."
+                : "No selftest result available."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selftestResult ? (
+            <div
+              className={`rounded-md px-3 py-2 text-sm ${
+                selftestResult.ok
+                  ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                  : "bg-destructive/10 text-destructive"
+              }`}
+            >
+              <div className="mb-1 flex items-center gap-1.5 text-xs font-medium">
+                {selftestResult.ok ? (
+                  <CheckCircle className="h-3.5 w-3.5" />
+                ) : (
+                  <XCircle className="h-3.5 w-3.5" />
+                )}
+                Sensor: {selftestResult.sensor}
+              </div>
+              <p className="text-sm leading-relaxed">
+                {selftestResult.ok
+                  ? selftestResult.message
+                  : selftestResult.error}
+              </p>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button onClick={() => setResultModalOpen(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
