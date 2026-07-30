@@ -2,15 +2,17 @@ import { useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SensorPayload } from "@/lib/types";
-import { Table2 } from "lucide-react";
+import { Eraser, Table2 } from "lucide-react";
 
 interface DataDrawerProps {
   data: SensorPayload[];
   streaming: boolean;
   onStreamingChange: (v: boolean) => void;
   streamingDisabled?: boolean;
+  onClear: () => void;
 }
 
 export function DataDrawer({
@@ -18,6 +20,7 @@ export function DataDrawer({
   streaming,
   onStreamingChange,
   streamingDisabled,
+  onClear,
 }: DataDrawerProps) {
   const scrollViewportRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +38,17 @@ export function DataDrawer({
         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
           {data.length}
         </Badge>
-        <div className="ml-auto flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClear}
+          disabled={data.length === 0}
+          className="ml-auto h-6 px-2 text-[10px]"
+        >
+          <Eraser className="h-3 w-3" />
+          Clear
+        </Button>
+        <div className="flex items-center gap-2">
           <Switch
             id="streaming"
             checked={streaming}

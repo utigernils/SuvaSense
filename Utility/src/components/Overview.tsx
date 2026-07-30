@@ -24,7 +24,9 @@ interface OverviewProps {
   onSelftest: (sensor: string) => void;
   serialLogs: SerialMessage[];
   onSerialSend: (msg: string) => void;
+  onSerialClear: () => void;
   streamData: SensorPayload[];
+  onStreamDataClear: () => void;
 }
 
 function formatBME680(data: BME680Data) {
@@ -76,7 +78,9 @@ export function Overview({
   onSelftest,
   serialLogs,
   onSerialSend,
+  onSerialClear,
   streamData,
+  onStreamDataClear,
 }: OverviewProps) {
   const bootloaderActive = deviceState === "bootloader";
   const controlsDisabled = !bootloaderActive || streaming;
@@ -146,6 +150,7 @@ export function Overview({
             messages={serialLogs}
             disabled={streaming}
             onSend={onSerialSend}
+            onClear={onSerialClear}
           />
         </div>
         <div className="min-h-0">
@@ -154,6 +159,7 @@ export function Overview({
             streaming={streaming}
             onStreamingChange={onStreamingChange}
             streamingDisabled={!bootloaderActive}
+            onClear={onStreamDataClear}
           />
         </div>
       </div>

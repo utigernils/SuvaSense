@@ -11,12 +11,14 @@ import {
   CheckCircle,
   Activity,
   FileJson,
+  Eraser,
 } from "lucide-react"
 
 interface SerialLogProps {
   messages: SerialMessage[]
   disabled?: boolean
   onSend: (message: string) => void
+  onClear: () => void
 }
 
 function formatParsedMessage(msg: SerialMessage) {
@@ -94,7 +96,7 @@ function formatParsedMessage(msg: SerialMessage) {
   }
 }
 
-export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
+export function SerialLog({ messages, disabled, onSend, onClear }: SerialLogProps) {
   const [input, setInput] = useState("")
   const scrollViewportRef = useRef<HTMLDivElement>(null)
 
@@ -115,7 +117,17 @@ export function SerialLog({ messages, disabled, onSend }: SerialLogProps) {
       <div className="flex items-center gap-2 border-b bg-muted/30 px-3 py-2">
         <FileJson className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold">Serial Monitor</span>
-        <Badge variant="secondary" className="ml-auto px-1.5 py-0 text-[10px]">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClear}
+          disabled={messages.length === 0}
+          className="ml-auto h-6 px-2 text-[10px]"
+        >
+          <Eraser className="h-3 w-3" />
+          Clear
+        </Button>
+        <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
           {messages.length}
         </Badge>
       </div>

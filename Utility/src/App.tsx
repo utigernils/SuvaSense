@@ -230,6 +230,15 @@ function App() {
     [sendCommand]
   )
 
+  const handleClearSerial = useCallback(() => {
+    processedMessageIndexRef.current = 0
+    setMessages([])
+  }, [setMessages])
+
+  const handleClearStreamData = useCallback(() => {
+    setStreamData([])
+  }, [])
+
   const handleStreamingChange = useCallback(
     (v: boolean) => {
       setStreaming(v)
@@ -402,7 +411,9 @@ function App() {
               onSelftest={handleSelftest}
               serialLogs={messages}
               onSerialSend={handleSerialSend}
+              onSerialClear={handleClearSerial}
               streamData={streamData}
+              onStreamDataClear={handleClearStreamData}
             />
           </TabsContent>
           <TabsContent value="settings" className="flex-1 overflow-auto m-0 p-0">
