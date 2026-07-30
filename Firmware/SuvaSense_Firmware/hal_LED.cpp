@@ -1,9 +1,23 @@
 #include "hal_LED.h"
+#include "sys_storage_led.h"
 
 static const CRGB COLOR_FACTORY    = CRGB::Red;
 static const CRGB COLOR_BOOTLOADER = CRGB::Orange;
 static const CRGB COLOR_RUNTIME    = CRGB::Green;
 static const unsigned long BEAT_INTERVAL = 500;
+static const unsigned long CONFIG_REFRESH_INTERVAL = 1000;
+
+static uint8_t _cfgBrightness = 32;
+static bool _cfgUserEnabled = true;
+static bool _cfgSystemEnabled = true;
+static unsigned long _lastConfigRefresh = 0;
+
+static void _refreshLedConfig() {
+  _cfgBrightness = StorageLED::getBrightness();
+  _cfgUserEnabled = StorageLED::isUserLEDEnabled();
+  _cfgSystemEnabled = StorageLED::isSystemLEDEnabled();
+  FastLED.setBrightness(_cfgBrightness);
+}
 
 static CRGB _systemColorToCRGB(SystemColor c) {
   switch (c) {
@@ -16,7 +30,7 @@ static CRGB _systemColorToCRGB(SystemColor c) {
 
 bool LEDController::begin() {
   FastLED.addLeds<WS2813, LED_PIN, GRB>(_leds, LED_COUNT);
-  FastLED.setBrightness(32);
+  _refreshLedConfig();
   FastLED.clear();
   FastLED.show();
 
@@ -61,11 +75,20 @@ SelfTestResult LEDController::selfTest() {
 }
 
 void LEDController::update() {
+  if (millis() - _lastConfigRefresh >= CONFIG_REFRESH_INTERVAL) {
+    _lastConfigRefresh = millis();
+    _refreshLedConfig();
+
+    if (!_cfgUserEnabled) {
+      _leds[1] = CRGB::Black;
+    }
+  }
+
   if (millis() - _lastBeat >= BEAT_INTERVAL) {
     _beatState = !_beatState;
     _lastBeat = millis();
 
-    if (_beatState) {
+    if (_cfgSystemEnabled && _beatState) {
       _leds[0] = _systemColorToCRGB(_systemColor);
     } else {
       _leds[0] = CRGB::Black;
@@ -80,18 +103,22 @@ void LEDController::setSystemColor(SystemColor color) {
 }
 
 void LEDController::setUserColor(CRGB color) {
-  _leds[1] = color;
+  _leds[1] = _cfgUserEnabled ? color : CRGB::Black;
   FastLED.show();
 }
 
 void LEDController::setUserColor(uint8_t r, uint8_t g, uint8_t b) {
-  _leds[1] = CRGB(r, g, b);
+  _leds[1] = _cfgUserEnabled ? CRGB(r, g, b) : CRGB::Black;
   FastLED.show();
 }
 
 void LEDController::startupAnimation() {
   for (int i = 0; i < LED_COUNT; i++) {
-    _leds[i] = CRGB::Blue;
+    if ((i == 0 && _cfgSystemEnabled) || (i == 1 && _cfgUserEnabled)) {
+      _leds[i] = CRGB::Blue;
+    } else {
+      _leds[i] = CRGB::Black;
+    }
     FastLED.show();
     delay(80);
     _leds[i] = CRGB::Black;
@@ -100,16 +127,19 @@ void LEDController::startupAnimation() {
   }
 
   for (int i = 0; i < 2; i++) {
-    fill_solid(_leds, LED_COUNT, CRGB::Blue);
+    _leds[0] = _cfgSystemEnabled ? CRGB::Blue : CRGB::Black;
+    _leds[1] = _cfgUserEnabled ? CRGB::Blue : CRGB::Black;
     FastLED.show();
     delay(120);
-    fill_solid(_leds, LED_COUNT, CRGB::Black);
+    _leds[0] = CRGB::Black;
+    _leds[1] = CRGB::Black;
     FastLED.show();
     delay(120);
   }
 }
 
 void LEDController::setBoth(CRGB color) {
-  fill_solid(_leds, LED_COUNT, color);
+  _leds[0] = _cfgSystemEnabled ? color : CRGB::Black;
+  _leds[1] = _cfgUserEnabled ? color : CRGB::Black;
   FastLED.show();
 }
