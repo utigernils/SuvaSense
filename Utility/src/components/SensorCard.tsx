@@ -22,6 +22,7 @@ interface SensorCardProps {
   i2cAddress?: string;
   description: string;
   values: SensorValue[];
+  noDataReason?: string;
   selftestResult?: SelftestResult;
   onSelftest: () => void;
   disabled?: boolean;
@@ -33,6 +34,7 @@ export function SensorCard({
   i2cAddress,
   description,
   values,
+  noDataReason,
   selftestResult,
   onSelftest,
   disabled,
@@ -76,21 +78,30 @@ export function SensorCard({
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 flex-1">
-          {values.map((v) => (
-            <div key={v.label} className="flex items-baseline gap-1">
-              <span className="text-[11px] text-muted-foreground leading-tight">
-                {v.label}
-              </span>
-              <span className="text-sm font-mono font-medium tabular-nums ml-auto leading-tight">
-                {v.value}
-              </span>
-              <span className="text-[10px] text-muted-foreground leading-tight">
-                {v.unit}
-              </span>
-            </div>
-          ))}
-        </div>
+        {values.length > 0 ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 flex-1">
+            {values.map((v) => (
+              <div key={v.label} className="flex items-baseline gap-1">
+                <span className="text-[11px] text-muted-foreground leading-tight">
+                  {v.label}
+                </span>
+                <span className="text-sm font-mono font-medium tabular-nums ml-auto leading-tight">
+                  {v.value}
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-tight">
+                  {v.unit}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-1 items-center justify-center rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
+            <span>
+              No data available.
+              {noDataReason ? ` ${noDataReason}` : ""}
+            </span>
+          </div>
+        )}
         {selftestResult && (
           <div
             className={`mt-3 flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs ${

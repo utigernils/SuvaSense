@@ -8,8 +8,41 @@ import { Settings } from "@/components/Settings"
 import { useSerial } from "@/hooks/useSerial"
 import { Commands } from "@/lib/protocol"
 import { type DeviceSettings, type SensorPayload } from "@/lib/types"
-import { mockSettings, mockPayload } from "@/lib/mock"
 import "./App.css"
+
+const initialSettings: DeviceSettings = {
+  wifi: {
+    ssid: "",
+    wifi_password: "",
+    hostname: "",
+  },
+  mqtt: {
+    broker: "",
+    port: 1883,
+    client_id: "",
+    mqtt_username: "",
+    mqtt_password: "",
+    topic_prefix: "",
+    keep_alive: 60,
+  },
+  sensors: {
+    publish_interval: 10000,
+    mpu_en: true,
+    veml_en: true,
+    bme_en: true,
+    sys_telem: true,
+  },
+  led: {
+    brightness: 32,
+    user_led: true,
+    sys_led: true,
+  },
+  system: {
+    serial_num: "",
+    boot_count: 0,
+    factory_done: false,
+  },
+}
 
 function App() {
   const {
@@ -30,7 +63,7 @@ function App() {
 
   const [page, setPage] = useState<"overview" | "settings">("overview")
   const [streaming, setStreaming] = useState(false)
-  const [settings, setSettings] = useState<DeviceSettings>(mockSettings)
+  const [settings, setSettings] = useState<DeviceSettings>(initialSettings)
   const [streamData, setStreamData] = useState<SensorPayload[]>([])
 
   useEffect(() => {
@@ -112,8 +145,6 @@ function App() {
     sendCommand(Commands.factoryReset())
   }, [sendCommand])
 
-  const displayPayload = connectionState === "connected" ? payload : mockPayload
-
   return (
     <TooltipProvider delay={0}>
       <div className="h-screen overflow-hidden flex flex-col">
@@ -140,10 +171,11 @@ function App() {
             className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col m-0 p-0"
           >
             <Overview
+              connectionState={connectionState}
               deviceState={deviceState}
               streaming={streaming}
               onStreamingChange={handleStreamingChange}
-              payload={displayPayload}
+              payload={payload}
               selftest={selftest}
               onSelftest={handleSelftest}
               serialLogs={messages}
@@ -154,6 +186,7 @@ function App() {
           <TabsContent value="settings" className="flex-1 overflow-auto m-0 p-0">
             <Settings
               settings={settings}
+              connectionState={connectionState}
               deviceState={deviceState}
               onSettingChange={handleSettingChange}
               onFactoryReset={handleFactoryReset}
