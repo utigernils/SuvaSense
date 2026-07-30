@@ -1,6 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { SubHeader } from "@/components/SubHeader"
 import { Overview } from "@/components/Overview"
@@ -17,6 +26,19 @@ interface SettingTarget {
   section: keyof DeviceSettings
   key: string
   kind: SettingValueKind
+}
+
+interface SaveCheckPending {
+  expected: string | number | boolean
+  kind: SettingValueKind
+  timeoutId: number
+}
+
+interface SaveResultModalState {
+  open: boolean
+  success: boolean
+  title: string
+  description: string
 }
 
 const initialSettings: DeviceSettings = {
@@ -129,7 +151,21 @@ function App() {
   const [streaming, setStreaming] = useState(false)
   const [settings, setSettings] = useState<DeviceSettings>(initialSettings)
   const [streamData, setStreamData] = useState<SensorPayload[]>([])
+  const [saveResultModal, setSaveResultModal] = useState<SaveResultModalState>({
+    open: false,
+    success: true,
+    title: "",
+    description: "",
+  })
   const processedMessageIndexRef = useRef(0)
+  const pendingSaveChecksRef = useRef<Map<string, SaveCheckPending>>(new Map())
+
+  const clearPendingSaveChecks = useCallback(() => {
+    for (const [, pending] of pendingSaveChecksRef.current) {
+      window.clearTimeout(pending.timeoutId)
+    }
+    pendingSaveChecksRef.current.clear()
+  }, [])
 
   useEffect(() => {
     if (streaming && connectionState === "connected") {
@@ -139,17 +175,19 @@ function App() {
 
   const handleConnect = useCallback(() => {
     processedMessageIndexRef.current = 0
+    clearPendingSaveChecks()
     setMessages([])
     setSettings(initialSettings)
     connect()
-  }, [connect, setMessages])
+  }, [clearPendingSaveChecks, connect, setMessages])
 
   const handleDisconnect = useCallback(() => {
     setStreaming(false)
     processedMessageIndexRef.current = 0
+    clearPendingSaveChecks()
     setSettings(initialSettings)
     disconnect()
-  }, [disconnect])
+  }, [clearPendingSaveChecks, disconnect])
 
   const handleSendBootloader = useCallback(() => {
     sendCommand(Commands.bootloader())
@@ -160,10 +198,11 @@ function App() {
     setStreamData([])
     setSettings(initialSettings)
     setMessages([])
+    clearPendingSaveChecks()
     resetTransientState()
     setDeviceState("runtime")
     sendCommand(Commands.reboot())
-  }, [resetTransientState, sendCommand, setDeviceState, setMessages])
+  }, [clearPendingSaveChecks, resetTransientState, sendCommand, setDeviceState, setMessages])
 
   const handleSetSerial = useCallback(
     (serial: string) => {
@@ -211,7 +250,39 @@ function App() {
         sectionData[key] = value
         return { ...prev, [section]: sectionData }
       })
-      sendCommand(Commands.set(key, String(value)))
+
+      const target = TARGET_TO_SETTING.get(key)
+
+      if (target) {
+        const expected = coerceSettingValue(value, target.kind)
+        if (expected !== undefined) {
+          const existing = pendingSaveChecksRef.current.get(key)
+          if (existing) {
+            window.clearTimeout(existing.timeoutId)
+          }
+
+          const timeoutId = window.setTimeout(() => {
+            pendingSaveChecksRef.current.delete(key)
+            setSaveResultModal({
+              open: true,
+              success: false,
+              title: "Setting save failed",
+              description: `No verification response received for '${key}'.`,
+            })
+          }, 3000)
+
+          pendingSaveChecksRef.current.set(key, {
+            expected,
+            kind: target.kind,
+            timeoutId,
+          })
+        }
+      }
+
+      void (async () => {
+        await sendCommand(Commands.set(key, String(value)))
+        await sendCommand(Commands.get(key))
+      })()
     },
     [sendCommand]
   )
@@ -262,6 +333,24 @@ function App() {
       const coercedValue = coerceSettingValue(parsed.value, target.kind)
       if (coercedValue === undefined) continue
 
+      const pendingSave = pendingSaveChecksRef.current.get(parsed.target)
+      if (pendingSave) {
+        window.clearTimeout(pendingSave.timeoutId)
+        pendingSaveChecksRef.current.delete(parsed.target)
+
+        const verifiedValue = coerceSettingValue(parsed.value, pendingSave.kind)
+        const matches = verifiedValue !== undefined && verifiedValue === pendingSave.expected
+
+        setSaveResultModal({
+          open: true,
+          success: matches,
+          title: matches ? "Setting saved" : "Setting save failed",
+          description: matches
+            ? `Verified '${parsed.target}' on device.`
+            : `Device returned a different value for '${parsed.target}'.`,
+        })
+      }
+
       setSettings((prev) => {
         const sectionData = { ...prev[target.section] } as Record<string, unknown>
         sectionData[target.key] = coercedValue
@@ -271,6 +360,12 @@ function App() {
 
     processedMessageIndexRef.current = messages.length
   }, [messages])
+
+  useEffect(() => {
+    return () => {
+      clearPendingSaveChecks()
+    }
+  }, [clearPendingSaveChecks])
 
   return (
     <TooltipProvider delay={0}>
@@ -320,6 +415,28 @@ function App() {
             />
           </TabsContent>
         </Tabs>
+
+        <Dialog
+          open={saveResultModal.open}
+          onOpenChange={(open) => setSaveResultModal((prev) => ({ ...prev, open }))}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{saveResultModal.title}</DialogTitle>
+              <DialogDescription>
+                {saveResultModal.description}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant={saveResultModal.success ? "default" : "destructive"}
+                onClick={() => setSaveResultModal((prev) => ({ ...prev, open: false }))}
+              >
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   )
