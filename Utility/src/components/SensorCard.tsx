@@ -37,6 +37,8 @@ interface SensorCardProps {
   disabled?: boolean;
 }
 
+const lastShownSelftestSignatureByCard = new Map<string, string>();
+
 export function SensorCard({
   title,
   icon,
@@ -49,7 +51,9 @@ export function SensorCard({
   disabled,
 }: SensorCardProps) {
   const [resultModalOpen, setResultModalOpen] = useState(false);
-  const lastShownSignatureRef = useRef<string>("");
+  const lastShownSignatureRef = useRef<string>(
+    lastShownSelftestSignatureByCard.get(title) ?? ""
+  );
 
   useEffect(() => {
     if (!selftestResult) return;
@@ -65,6 +69,7 @@ export function SensorCard({
     if (signature === lastShownSignatureRef.current) return;
 
     lastShownSignatureRef.current = signature;
+    lastShownSelftestSignatureByCard.set(title, signature);
     setResultModalOpen(true);
   }, [selftestResult, title]);
 
