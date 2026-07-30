@@ -9,7 +9,8 @@ extern LEDController leds;
 static bool _done = false;
 
 void Factory::setup() {
-  leds.setSystemColor(SystemColor::FACTORY);
+  leds.setSystemMode(SystemMode::FACTORY);
+  leds.setUserLatch(UserLatch::NONE);
   SerialJSON::sendInfo("Factory mode - enter serial number via JSON or raw text");
   _done = false;
 }

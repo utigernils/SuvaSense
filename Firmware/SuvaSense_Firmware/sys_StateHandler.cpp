@@ -20,12 +20,13 @@ DeviceState StateHandler::boot() {
   }
 
   SerialJSON::sendInfo("Waiting 5s for bootloader trigger...");
+  leds.setSystemMode(SystemMode::BOOT_WINDOW);
+  leds.setUserLatch(UserLatch::NONE);
   unsigned long start = millis();
   bool bootloaderTriggered = false;
 
   while (millis() - start < 5000) {
-    bool blinkPhase = ((millis() - start) / 200) % 2;
-    leds.setBoth(blinkPhase ? CRGB::Orange : CRGB::Black);
+    leds.update();
 
     SerialJSON::Command cmd = SerialJSON::readCommand();
     if (cmd.valid && cmd.action == "bootloader") {

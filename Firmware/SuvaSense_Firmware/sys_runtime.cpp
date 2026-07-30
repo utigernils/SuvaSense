@@ -12,7 +12,6 @@
 extern LEDController leds;
 
 static unsigned long _lastPublish = 0;
-static unsigned long _publishBlinkUntil = 0;
 static bool _runtimeInitDone = false;
 
 enum class RuntimeInitPhase {
@@ -25,8 +24,7 @@ enum class RuntimeInitPhase {
 static RuntimeInitPhase _initPhase = RuntimeInitPhase::PAYLOAD;
 
 static void _blinkPublish() {
-  _publishBlinkUntil = millis() + 80;
-  leds.setUserColor(CRGB::Yellow);
+  leds.triggerUserEvent(UserEvent::PUBLISH);
 }
 
 static void _buildAndPublish() {
@@ -81,7 +79,7 @@ static void _runInitStep() {
       _initPhase = RuntimeInitPhase::DONE;
       _runtimeInitDone = true;
       SerialJSON::sendInfo("Runtime started");
-      leds.setBoth(CRGB::Black);
+      leds.setSystemMode(SystemMode::RUNTIME);
       return;
 
     case RuntimeInitPhase::DONE:
@@ -90,11 +88,10 @@ static void _runInitStep() {
 }
 
 void Runtime::setup() {
-  leds.setSystemColor(SystemColor::RUNTIME);
-  leds.setBoth(CRGB::Green);
+  leds.setSystemMode(SystemMode::RUNTIME_INIT);
+  leds.setUserLatch(UserLatch::NONE);
 
   _lastPublish = 0;
-  _publishBlinkUntil = 0;
   _runtimeInitDone = false;
   _initPhase = RuntimeInitPhase::PAYLOAD;
 }
@@ -109,11 +106,6 @@ void Runtime::loop() {
 
   SysWiFi::loop();
   SysMQTT::loop();
-
-  if (_publishBlinkUntil && millis() > _publishBlinkUntil) {
-    leds.setUserColor(CRGB::Black);
-    _publishBlinkUntil = 0;
-  }
 
   if (!SysMQTT::isConnected()) {
     _handleRuntimeCommand();

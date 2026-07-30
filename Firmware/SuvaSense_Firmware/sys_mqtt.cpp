@@ -20,17 +20,6 @@ static String _clientId;
 static String _username;
 static String _password;
 
-static uint8_t _blinkRemaining = 0;
-static CRGB _blinkColor = CRGB::Black;
-static unsigned long _blinkLastToggle = 0;
-
-static void _startBlink(CRGB color) {
-  _blinkRemaining = 4;
-  _blinkColor = color;
-  _blinkLastToggle = millis();
-  leds.setUserColor(color);
-}
-
 static bool _doConnect() {
   _mqtt.disconnect();
 
@@ -78,26 +67,12 @@ void SysMQTT::loop() {
   }
 
   if (mqttUp && !_wasConnected) {
-    _startBlink(CRGB::Blue);
+    leds.triggerUserEvent(UserEvent::MQTT_LINK_UP);
   } else if (!mqttUp && _wasConnected) {
-    _startBlink(CRGB::Orange);
+    leds.triggerUserEvent(UserEvent::MQTT_LINK_DOWN);
   }
 
   _wasConnected = mqttUp;
-
-  if (_blinkRemaining > 0) {
-    if (millis() - _blinkLastToggle >= 100) {
-      _blinkLastToggle = millis();
-      _blinkRemaining--;
-      if (_blinkRemaining % 2 == 0) {
-        leds.setUserColor(_blinkColor);
-      } else {
-        leds.setUserColor(CRGB::Black);
-      }
-    }
-  } else {
-    leds.setUserColor(CRGB::Black);
-  }
 
   if (!wifiUp) return;
   if (mqttUp) return;

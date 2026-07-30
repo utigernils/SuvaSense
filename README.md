@@ -168,12 +168,14 @@ The board has two WS2813 RGB LEDs:
 | **System LED (LED 0)** | Device state indicator | Left side |
 | **User LED (LED 1)** | Connection & activity | Right side |
 
-### System LED — State Heartbeat (blinks every 0.5 s)
+### System LED — State Patterns
 
 | Color | State | Meaning |
 |---|---|---|
 | Red | Factory | First boot — waiting for serial number |
+| Orange (fast pulse, 0.2 s) | Boot window | 5-second hook window after boot |
 | Orange | Bootloader | Configuration mode active |
+| Cyan (solid) | Runtime init | Runtime is starting services/sensors |
 | Green | Runtime | Normal operation, publishing data |
 
 ### User LED — Event Indicators
@@ -189,7 +191,7 @@ The board has two WS2813 RGB LEDs:
 
 ### Boot Window
 
-During the 5-second post-boot window, **both LEDs** blink orange rapidly (every 0.2 s). Send `{"action":"bootloader"}` to enter configuration mode, or wait for runtime.
+During the 5-second post-boot window, the **system LED** pulses orange rapidly (every 0.2 s). Send `{"action":"bootloader"}` to enter configuration mode, or wait for runtime.
 
 ### Power-Up Animation
 
