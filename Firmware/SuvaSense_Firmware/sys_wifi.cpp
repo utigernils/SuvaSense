@@ -57,7 +57,15 @@ void SysWiFi::loop() {
   if (!connected && !_connecting && millis() - _lastReconnectAttempt > 10000) {
     _lastReconnectAttempt = millis();
     SerialJSON::sendInfo("WiFi: reconnecting...");
-    WiFi.reconnect();
+
+    bool reconnectStarted = WiFi.reconnect();
+    if (reconnectStarted) {
+      _connecting = true;
+      _connectStart = millis();
+    } else {
+      SerialJSON::sendWarn("WiFi: reconnect request failed");
+      leds.triggerUserEvent(UserEvent::WIFI_DISCONNECTED);
+    }
   }
 }
 

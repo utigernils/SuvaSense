@@ -85,6 +85,7 @@ void SysMQTT::loop() {
       SerialJSON::sendInfo("MQTT: connected");
     } else {
       SerialJSON::sendWarn("MQTT: connection failed, rc=" + String(_mqtt.state()));
+      leds.triggerUserEvent(UserEvent::MQTT_LINK_DOWN);
     }
   }
 }
