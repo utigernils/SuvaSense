@@ -1,14 +1,8 @@
+import { useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SensorPayload } from "@/lib/types";
 import { Table2 } from "lucide-react";
 
@@ -25,6 +19,14 @@ export function DataDrawer({
   onStreamingChange,
   streamingDisabled,
 }: DataDrawerProps) {
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollViewportRef.current) {
+      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
+    }
+  }, [data]);
+
   return (
     <div className="flex h-full min-h-0 flex-col border rounded-lg bg-card/50 overflow-hidden">
       <div className="flex items-center gap-2 px-3 py-2 border-b bg-muted/30">
@@ -48,102 +50,104 @@ export function DataDrawer({
           </Label>
         </div>
       </div>
-      <div className="flex-1 min-h-0 overflow-auto px-3 pb-3 pt-2">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs w-16">#</TableHead>
-              <TableHead className="text-xs">Temp °C</TableHead>
-              <TableHead className="text-xs">Hum %</TableHead>
-              <TableHead className="text-xs">Press hPa</TableHead>
-              <TableHead className="text-xs">Gas kΩ</TableHead>
-              <TableHead className="text-xs">Lux</TableHead>
-              <TableHead className="text-xs">Acc X</TableHead>
-              <TableHead className="text-xs">Acc Y</TableHead>
-              <TableHead className="text-xs">Acc Z</TableHead>
-              <TableHead className="text-xs">Gyro X</TableHead>
-              <TableHead className="text-xs">Gyro Y</TableHead>
-              <TableHead className="text-xs">Gyro Z</TableHead>
-              <TableHead className="text-xs">Ang X</TableHead>
-              <TableHead className="text-xs">Ang Y</TableHead>
-              <TableHead className="text-xs">Ang Z</TableHead>
-              <TableHead className="text-xs">CPU °C</TableHead>
-              <TableHead className="text-xs">Heap</TableHead>
-              <TableHead className="text-xs">RSSI</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <ScrollArea className="flex-1 min-h-0" viewportRef={scrollViewportRef}>
+        <div className="px-3 pb-3 pt-2">
+          <table className="min-w-max caption-bottom text-sm">
+            <thead className="[&_tr]:border-b">
+              <tr className="border-b transition-colors hover:bg-muted/50">
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs w-16">#</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Temp °C</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Hum %</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Press hPa</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Gas kΩ</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Lux</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Acc X</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Acc Y</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Acc Z</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Gyro X</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Gyro Y</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Gyro Z</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Ang X</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Ang Y</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Ang Z</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">CPU °C</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">Heap</th>
+                <th className="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground text-xs">RSSI</th>
+              </tr>
+            </thead>
+            <tbody className="[&_tr:last-child]:border-0">
             {data.map((row, i) => (
-              <TableRow key={i}>
-                <TableCell className="text-xs text-muted-foreground">
+              <tr key={i} className="border-b transition-colors hover:bg-muted/50">
+                <td className="p-2 align-middle whitespace-nowrap text-xs text-muted-foreground">
                   {i + 1}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.bme680?.temp?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.bme680?.hum?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.bme680?.press?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.bme680?.gas?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.veml7700?.lux?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.acc.x?.toFixed(2) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.acc.y?.toFixed(2) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.acc.z?.toFixed(2) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.gyro.x?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.gyro.y?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.gyro.z?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.ang.x?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.ang.y?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.mpu6050?.ang.z?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.system?.cpu_temp?.toFixed(1) ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.system?.free_heap ?? "—"}
-                </TableCell>
-                <TableCell className="text-xs font-mono tabular-nums">
+                </td>
+                <td className="p-2 align-middle whitespace-nowrap text-xs font-mono tabular-nums">
                   {row.system?.rssi ?? "—"}
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))}
             {data.length === 0 && (
-              <TableRow>
-                <TableCell
+              <tr className="border-b transition-colors hover:bg-muted/50">
+                <td
                   colSpan={18}
-                  className="text-center text-xs text-muted-foreground py-8"
+                  className="p-2 align-middle whitespace-nowrap text-center text-xs text-muted-foreground py-8"
                 >
                   No stream data yet. Start streaming to collect samples.
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             )}
-          </TableBody>
-        </Table>
-      </div>
+            </tbody>
+          </table>
+        </div>
+      </ScrollArea>
     </div>
   );
 }
