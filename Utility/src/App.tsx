@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Header } from "@/components/Header"
@@ -9,6 +9,15 @@ import { useSerial } from "@/hooks/useSerial"
 import { Commands } from "@/lib/protocol"
 import { type DeviceSettings, type SensorPayload } from "@/lib/types"
 import "./App.css"
+
+type SettingValueKind = "string" | "number" | "boolean"
+
+interface SettingTarget {
+  target: string
+  section: keyof DeviceSettings
+  key: string
+  kind: SettingValueKind
+}
 
 const initialSettings: DeviceSettings = {
   wifi: {
@@ -44,6 +53,60 @@ const initialSettings: DeviceSettings = {
   },
 }
 
+const SETTING_TARGETS: SettingTarget[] = [
+  { target: "ssid", section: "wifi", key: "ssid", kind: "string" },
+  { target: "wifi_password", section: "wifi", key: "wifi_password", kind: "string" },
+  { target: "hostname", section: "wifi", key: "hostname", kind: "string" },
+
+  { target: "broker", section: "mqtt", key: "broker", kind: "string" },
+  { target: "port", section: "mqtt", key: "port", kind: "number" },
+  { target: "client_id", section: "mqtt", key: "client_id", kind: "string" },
+  { target: "mqtt_username", section: "mqtt", key: "mqtt_username", kind: "string" },
+  { target: "mqtt_password", section: "mqtt", key: "mqtt_password", kind: "string" },
+  { target: "topic_prefix", section: "mqtt", key: "topic_prefix", kind: "string" },
+  { target: "keep_alive", section: "mqtt", key: "keep_alive", kind: "number" },
+
+  { target: "publish_interval", section: "sensors", key: "publish_interval", kind: "number" },
+  { target: "mpu_en", section: "sensors", key: "mpu_en", kind: "boolean" },
+  { target: "veml_en", section: "sensors", key: "veml_en", kind: "boolean" },
+  { target: "bme_en", section: "sensors", key: "bme_en", kind: "boolean" },
+  { target: "sys_telem", section: "sensors", key: "sys_telem", kind: "boolean" },
+
+  { target: "brightness", section: "led", key: "brightness", kind: "number" },
+  { target: "user_led", section: "led", key: "user_led", kind: "boolean" },
+  { target: "sys_led", section: "led", key: "sys_led", kind: "boolean" },
+
+  { target: "serial_num", section: "system", key: "serial_num", kind: "string" },
+  { target: "boot_count", section: "system", key: "boot_count", kind: "number" },
+  { target: "factory_done", section: "system", key: "factory_done", kind: "boolean" },
+]
+
+const TARGET_TO_SETTING = new Map(SETTING_TARGETS.map((t) => [t.target, t]))
+
+function coerceSettingValue(raw: unknown, kind: SettingValueKind): string | number | boolean | undefined {
+  if (kind === "string") {
+    return raw == null ? "" : String(raw)
+  }
+
+  if (kind === "number") {
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) ? parsed : undefined
+  }
+
+  if (typeof raw === "boolean") return raw
+  if (typeof raw === "number") {
+    if (raw === 1) return true
+    if (raw === 0) return false
+    return undefined
+  }
+
+  const normalized = String(raw).trim().toLowerCase()
+  if (normalized === "true" || normalized === "1") return true
+  if (normalized === "false" || normalized === "0") return false
+  return undefined
+}
+
 function App() {
   const {
     connectionState,
@@ -65,6 +128,7 @@ function App() {
   const [streaming, setStreaming] = useState(false)
   const [settings, setSettings] = useState<DeviceSettings>(initialSettings)
   const [streamData, setStreamData] = useState<SensorPayload[]>([])
+  const processedMessageIndexRef = useRef(0)
 
   useEffect(() => {
     if (streaming && connectionState === "connected") {
@@ -73,12 +137,16 @@ function App() {
   }, [payload, streaming, connectionState])
 
   const handleConnect = useCallback(() => {
+    processedMessageIndexRef.current = 0
     setMessages([])
+    setSettings(initialSettings)
     connect()
   }, [connect, setMessages])
 
   const handleDisconnect = useCallback(() => {
     setStreaming(false)
+    processedMessageIndexRef.current = 0
+    setSettings(initialSettings)
     disconnect()
   }, [disconnect])
 
@@ -144,6 +212,58 @@ function App() {
   const handleFactoryReset = useCallback(() => {
     sendCommand(Commands.factoryReset())
   }, [sendCommand])
+
+  const requestSettingsFromDevice = useCallback(() => {
+    if (connectionState !== "connected") return
+    for (const { target } of SETTING_TARGETS) {
+      sendCommand(Commands.get(target))
+    }
+  }, [connectionState, sendCommand])
+
+  useEffect(() => {
+    if (page === "settings") {
+      requestSettingsFromDevice()
+    }
+  }, [page, requestSettingsFromDevice])
+
+  useEffect(() => {
+    requestSettingsFromDevice()
+  }, [connectionState, deviceState, requestSettingsFromDevice])
+
+  useEffect(() => {
+    if (messages.length < processedMessageIndexRef.current) {
+      processedMessageIndexRef.current = 0
+    }
+
+    for (let i = processedMessageIndexRef.current; i < messages.length; i += 1) {
+      const msg = messages[i]
+      if (msg.direction !== "rx") continue
+
+      const parsed = msg.parsed
+      if (
+        parsed?.type !== "response" ||
+        parsed.action !== "get" ||
+        !parsed.target ||
+        parsed.value === undefined
+      ) {
+        continue
+      }
+
+      const target = TARGET_TO_SETTING.get(parsed.target)
+      if (!target) continue
+
+      const coercedValue = coerceSettingValue(parsed.value, target.kind)
+      if (coercedValue === undefined) continue
+
+      setSettings((prev) => {
+        const sectionData = { ...prev[target.section] } as Record<string, unknown>
+        sectionData[target.key] = coercedValue
+        return { ...prev, [target.section]: sectionData }
+      })
+    }
+
+    processedMessageIndexRef.current = messages.length
+  }, [messages])
 
   return (
     <TooltipProvider delay={0}>
