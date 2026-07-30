@@ -87,6 +87,13 @@ function formatParsedMessage(msg: SerialMessage) {
       if (p.action === "bootloader") return <span className="text-orange-500">Bootloader hook</span>
       if (p.action === "factory_reset") return <span className="text-destructive">Factory reset</span>
       if (p.action === "set_serial") return <span className="text-muted-foreground">Set serial</span>
+
+      if (!p.action && !p.target) {
+        const raw = msg.raw.trim()
+        if (!raw) return null
+        return <span className="text-muted-foreground">{raw}</span>
+      }
+
       return (
         <span>
           <span className="text-muted-foreground">{p.action}</span>
@@ -134,6 +141,9 @@ export function SerialLog({ messages, disabled, onSend, onClear }: SerialLogProp
       <ScrollArea className="flex-1 min-h-0" viewportRef={scrollViewportRef}>
         <div className="space-y-0.5 p-2 font-mono text-xs">
           {messages.map((msg) => {
+            const formatted = formatParsedMessage(msg)
+            if (!formatted) return null
+
             const rowClass =
               msg.direction === "tx"
                 ? "bg-muted/60"
@@ -159,7 +169,7 @@ export function SerialLog({ messages, disabled, onSend, onClear }: SerialLogProp
                   })}
                 </span>
                 <span className="min-w-0 break-all leading-relaxed">
-                  {formatParsedMessage(msg)}
+                  {formatted}
                 </span>
               </div>
             )
