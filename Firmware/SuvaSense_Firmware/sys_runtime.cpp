@@ -31,6 +31,7 @@ static void _buildAndPublish() {
   String payload = Payload::build();
   SerialJSON::sendInfo("MQTT publish: " + payload);
   if (SysMQTT::publish("data", payload)) {
+    leds.triggerUserEvent(UserEvent::PUBLISH_SUCCESS);
     SerialJSON::sendInfo("MQTT publish succeeded");
   } else {
     SerialJSON::sendWarn("MQTT publish failed");

@@ -32,6 +32,7 @@ enum class UserEvent {
   MQTT_LINK_UP,
   MQTT_LINK_DOWN,
   PUBLISH,
+  PUBLISH_SUCCESS,
 };
 
 #ifndef HAL_SELFTEST_RESULT

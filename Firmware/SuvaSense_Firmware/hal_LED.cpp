@@ -213,6 +213,11 @@ void LEDController::triggerUserEvent(UserEvent event) {
       _userEventInterval = 80;
       _userEventTogglesRemaining = 1;
       break;
+    case UserEvent::PUBLISH_SUCCESS:
+      _userEventColor = CRGB::Blue;
+      _userEventInterval = 100;
+      _userEventTogglesRemaining = 3;
+      break;
   }
 }
 
