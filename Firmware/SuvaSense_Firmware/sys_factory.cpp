@@ -28,17 +28,4 @@ void Factory::loop() {
     delay(1000);
     ESP.restart();
   }
-
-  if (cmd.action == "_parse_error") {
-    String line = cmd.value;
-    line.trim();
-    if (line.length() > 0) {
-      StorageSystem::setSerialNumber(line);
-      StorageSystem::setFactoryDone(true);
-      SerialJSON::sendInfo("Serial number stored (raw). Rebooting...");
-      _done = true;
-      delay(1000);
-      ESP.restart();
-    }
-  }
 }
