@@ -148,6 +148,44 @@ func (h *Handler) ListReadingsByType(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) ListAllReadings(w http.ResponseWriter, r *http.Request) {
+	serial := chi.URLParam(r, "serial")
+
+	filter, err := parseReadingFilter(r)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var sensorType *string
+	sensorTypeRaw := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("sensor_type")))
+	if sensorTypeRaw != "" {
+		if !domain.IsValidSensorType(sensorTypeRaw) {
+			respondError(w, http.StatusBadRequest, "invalid sensor_type query value")
+			return
+		}
+		sensorType = &sensorTypeRaw
+	}
+
+	readings, err := h.repo.ListAllReadings(r.Context(), serial, sensorType, filter)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to list readings")
+		return
+	}
+
+	resp := map[string]any{
+		"serial_number": serial,
+		"page":          filter.Page,
+		"page_size":     filter.PageSize,
+		"items":         readings,
+	}
+	if sensorType != nil {
+		resp["sensor_type"] = *sensorType
+	}
+
+	respondJSON(w, http.StatusOK, resp)
+}
+
 func parseReadingFilter(r *http.Request) (domain.ReadingFilter, error) {
 	q := r.URL.Query()
 	page := parseIntOrDefault(q.Get("page"), 1)

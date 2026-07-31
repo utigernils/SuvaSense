@@ -35,8 +35,49 @@ If one is missing, it executes schema.sql from DB_SCHEMA_PATH.
 - GET /api/v1/sensors
 - GET /api/v1/sensors/{serial}
 - GET /api/v1/sensors/{serial}/latest
+- GET /api/v1/sensors/{serial}/readings
 - GET /api/v1/sensors/{serial}/readings/{sensorType}
 - GET /api/v1/sensors/{serial}/readings/{sensorType}/latest
+
+## Sensor Types
+
+Allowed values for {sensorType} are:
+
+- bme680
+- mpu6050
+- veml7700
+- system
+
+Defined in code at Backend/internal/domain/types.go via IsValidSensorType.
+
+## All Readings (Formatted + Filterable)
+
+Use this endpoint for all readings of one sensor type for one device:
+
+- GET /api/v1/sensors/{serial}/readings/{sensorType}
+
+Use this endpoint for all readings of a device across all sensor types:
+
+- GET /api/v1/sensors/{serial}/readings
+
+This returns items in the same structured format as latest, but paginated and filterable.
+
+Examples:
+
+- Latest only:
+   - GET /api/v1/sensors/SN12345/readings/bme680/latest
+- All BME680 readings, newest first:
+   - GET /api/v1/sensors/SN12345/readings/bme680?page=1&page_size=100
+- All readings (mixed sensor types), newest first:
+   - GET /api/v1/sensors/SN12345/readings?page=1&page_size=100
+- All readings, but only one sensor type via query filter:
+   - GET /api/v1/sensors/SN12345/readings?sensor_type=bme680&page=1&page_size=100
+- Time-window filtered:
+   - GET /api/v1/sensors/SN12345/readings/bme680?from=2026-07-31T00:00:00Z&to=2026-07-31T23:59:59Z
+- Numeric filter (temperature range):
+   - GET /api/v1/sensors/SN12345/readings/bme680?temp_c_min=20&temp_c_max=30
+- Numeric filter (RSSI on system telemetry):
+   - GET /api/v1/sensors/SN12345/readings/system?rssi_dbm_min=-75
 
 ## Filtering and Pagination
 

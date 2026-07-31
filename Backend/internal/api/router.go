@@ -20,6 +20,7 @@ func NewRouter(handler *Handler) http.Handler {
 		api.Get("/sensors", handler.ListSensors)
 		api.Get("/sensors/{serial}", handler.GetSensorBySerial)
 		api.Get("/sensors/{serial}/latest", handler.GetSensorLatestSnapshot)
+		api.Get("/sensors/{serial}/readings", handler.ListAllReadings)
 		api.Get("/sensors/{serial}/readings/{sensorType}", handler.ListReadingsByType)
 		api.Get("/sensors/{serial}/readings/{sensorType}/latest", handler.GetLatestReadingByType)
 	})

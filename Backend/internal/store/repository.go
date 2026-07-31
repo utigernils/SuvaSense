@@ -343,6 +343,106 @@ func (r *Repository) ListReadings(ctx context.Context, serial, sensorType string
 	return out, nil
 }
 
+func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorType *string, filter domain.ReadingFilter) ([]domain.Reading, error) {
+	query := strings.Builder{}
+	args := make([]any, 0, 20)
+	argPos := 1
+
+	query.WriteString(`
+	SELECT
+		r.id,
+		r.sensor_id,
+		s.serial_number,
+		r.sensor_type,
+		r.recorded_at,
+		r.device_uptime_s,
+		r.source_topic,
+		r.raw,
+		r.temp_c,
+		r.hum_pct,
+		r.press_hpa,
+		r.gas_kohm,
+		r.lux,
+		r.white_raw,
+		r.acc_x,
+		r.acc_y,
+		r.acc_z,
+		r.gyro_x,
+		r.gyro_y,
+		r.gyro_z,
+		r.ang_x,
+		r.ang_y,
+		r.ang_z,
+		r.cpu_temp_c,
+		r.free_heap_bytes,
+		r.rssi_dbm
+	FROM readings r
+	JOIN sensors s ON s.id = r.sensor_id
+	WHERE s.serial_number = $1
+	`)
+	args = append(args, serial)
+	argPos = 2
+
+	if sensorType != nil {
+		query.WriteString(fmt.Sprintf(" AND r.sensor_type = $%d", argPos))
+		args = append(args, *sensorType)
+		argPos++
+	}
+
+	if filter.From != nil {
+		query.WriteString(fmt.Sprintf(" AND r.recorded_at >= $%d", argPos))
+		args = append(args, *filter.From)
+		argPos++
+	}
+	if filter.To != nil {
+		query.WriteString(fmt.Sprintf(" AND r.recorded_at <= $%d", argPos))
+		args = append(args, *filter.To)
+		argPos++
+	}
+
+	for field, v := range filter.FieldMins {
+		if !allowedNumericFilters("")[field] {
+			continue
+		}
+		query.WriteString(fmt.Sprintf(" AND r.%s >= $%d", field, argPos))
+		args = append(args, v)
+		argPos++
+	}
+	for field, v := range filter.FieldMaxs {
+		if !allowedNumericFilters("")[field] {
+			continue
+		}
+		query.WriteString(fmt.Sprintf(" AND r.%s <= $%d", field, argPos))
+		args = append(args, v)
+		argPos++
+	}
+
+	query.WriteString(" ORDER BY r.recorded_at DESC")
+	query.WriteString(fmt.Sprintf(" LIMIT $%d OFFSET $%d", argPos, argPos+1))
+	args = append(args, filter.PageSize, (filter.Page-1)*filter.PageSize)
+
+	rows, err := r.db.Query(ctx, query.String(), args...)
+	if err != nil {
+		return nil, fmt.Errorf("query all readings: %w", err)
+	}
+	defer rows.Close()
+
+	out := make([]domain.Reading, 0, filter.PageSize)
+	for rows.Next() {
+		rec, err := scanReading(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, rec)
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterate all readings: %w", rows.Err())
+	}
+
+	return out, nil
+}
+
 func allowedNumericFilters(sensorType string) map[string]bool {
 	base := map[string]bool{
 		"device_uptime_s": true,
