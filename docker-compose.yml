@@ -1,0 +1,52 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: suvasense-mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: suvasense-postgres
+    environment:
+      POSTGRES_USER: suvasense
+      POSTGRES_PASSWORD: suvasense_secret
+      POSTGRES_DB: suvasense
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U suvasense -d suvasense"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: suvasense-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@suva.ch
+      PGADMIN_DEFAULT_PASSWORD: suvasense_admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  postgres_data:
+  pgadmin_data:
