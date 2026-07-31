@@ -60,9 +60,8 @@ void setup() {
 
   Serial.println("[SN-RESET] Done. Entering deep sleep.");
   delay(50);
-  esp_deep_sleep_start();
 }
 
 void loop() {
-  // Intentionally empty; device sleeps after setup.
+  delay(50);
 }
