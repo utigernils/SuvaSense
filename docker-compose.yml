@@ -1,4 +1,20 @@
 services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: suvasense-backend
+    env_file:
+      - ./Backend/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    restart: unless-stopped
+
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: suvasense-mqtt
