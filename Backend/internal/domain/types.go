@@ -103,6 +103,13 @@ type Reading struct {
 	RSSIDbm       *int     `json:"rssi_dbm,omitempty"`
 }
 
+type ReadingPush struct {
+	SerialNumber string             `json:"serial_number"`
+	RecordedAt   time.Time          `json:"recorded_at"`
+	SourceTopic  string             `json:"source_topic,omitempty"`
+	Readings     map[string]Reading `json:"readings"`
+}
+
 type ReadingFilter struct {
 	From      *time.Time
 	To        *time.Time

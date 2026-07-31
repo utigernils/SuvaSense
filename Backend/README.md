@@ -60,6 +60,8 @@ Use this endpoint for all readings of a device across all sensor types:
 
 - GET /api/v1/sensors/{serial}/readings
 
+This endpoint is consolidated by publish event. One item represents one MQTT data push and contains all available sensor types under `readings`.
+
 This returns items in the same structured format as latest, but paginated and filterable.
 
 Examples:

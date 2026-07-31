@@ -343,10 +343,18 @@ func (r *Repository) ListReadings(ctx context.Context, serial, sensorType string
 	return out, nil
 }
 
-func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorType *string, filter domain.ReadingFilter) ([]domain.Reading, error) {
+func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorType *string, filter domain.ReadingFilter) ([]domain.ReadingPush, error) {
+	timestamps, err := r.listReadingPushTimestamps(ctx, serial, sensorType, filter)
+	if err != nil {
+		return nil, err
+	}
+	if len(timestamps) == 0 {
+		return []domain.ReadingPush{}, nil
+	}
+
 	query := strings.Builder{}
-	args := make([]any, 0, 20)
-	argPos := 1
+	args := []any{serial, timestamps}
+	argPos := 3
 
 	query.WriteString(`
 	SELECT
@@ -378,10 +386,69 @@ func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorT
 		r.rssi_dbm
 	FROM readings r
 	JOIN sensors s ON s.id = r.sensor_id
+	WHERE s.serial_number = $1 AND r.recorded_at = ANY($2::timestamptz[])
+	`)
+
+	if sensorType != nil {
+		query.WriteString(fmt.Sprintf(" AND r.sensor_type = $%d", argPos))
+		args = append(args, *sensorType)
+		argPos++
+	}
+
+	query.WriteString(" ORDER BY r.recorded_at DESC, r.sensor_type ASC")
+
+	rows, err := r.db.Query(ctx, query.String(), args...)
+	if err != nil {
+		return nil, fmt.Errorf("query push readings: %w", err)
+	}
+	defer rows.Close()
+
+	pushMap := map[time.Time]*domain.ReadingPush{}
+	for rows.Next() {
+		rec, err := scanReading(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		push, ok := pushMap[rec.RecordedAt]
+		if !ok {
+			push = &domain.ReadingPush{
+				SerialNumber: rec.SerialNumber,
+				RecordedAt:   rec.RecordedAt,
+				SourceTopic:  rec.SourceTopic,
+				Readings:     map[string]domain.Reading{},
+			}
+			pushMap[rec.RecordedAt] = push
+		}
+
+		push.Readings[rec.SensorType] = rec
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterate push readings: %w", rows.Err())
+	}
+
+	out := make([]domain.ReadingPush, 0, len(timestamps))
+	for _, ts := range timestamps {
+		if push, ok := pushMap[ts]; ok {
+			out = append(out, *push)
+		}
+	}
+
+	return out, nil
+}
+
+func (r *Repository) listReadingPushTimestamps(ctx context.Context, serial string, sensorType *string, filter domain.ReadingFilter) ([]time.Time, error) {
+	query := strings.Builder{}
+	args := []any{serial}
+	argPos := 2
+
+	query.WriteString(`
+	SELECT DISTINCT r.recorded_at
+	FROM readings r
+	JOIN sensors s ON s.id = r.sensor_id
 	WHERE s.serial_number = $1
 	`)
-	args = append(args, serial)
-	argPos = 2
 
 	if sensorType != nil {
 		query.WriteString(fmt.Sprintf(" AND r.sensor_type = $%d", argPos))
@@ -400,8 +467,9 @@ func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorT
 		argPos++
 	}
 
+	allowedFields := allowedNumericFilters("")
 	for field, v := range filter.FieldMins {
-		if !allowedNumericFilters("")[field] {
+		if !allowedFields[field] {
 			continue
 		}
 		query.WriteString(fmt.Sprintf(" AND r.%s >= $%d", field, argPos))
@@ -409,7 +477,7 @@ func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorT
 		argPos++
 	}
 	for field, v := range filter.FieldMaxs {
-		if !allowedNumericFilters("")[field] {
+		if !allowedFields[field] {
 			continue
 		}
 		query.WriteString(fmt.Sprintf(" AND r.%s <= $%d", field, argPos))
@@ -423,24 +491,24 @@ func (r *Repository) ListAllReadings(ctx context.Context, serial string, sensorT
 
 	rows, err := r.db.Query(ctx, query.String(), args...)
 	if err != nil {
-		return nil, fmt.Errorf("query all readings: %w", err)
+		return nil, fmt.Errorf("query push timestamps: %w", err)
 	}
 	defer rows.Close()
 
-	out := make([]domain.Reading, 0, filter.PageSize)
+	timestamps := make([]time.Time, 0, filter.PageSize)
 	for rows.Next() {
-		rec, err := scanReading(rows)
-		if err != nil {
-			return nil, err
+		var ts time.Time
+		if err := rows.Scan(&ts); err != nil {
+			return nil, fmt.Errorf("scan push timestamp: %w", err)
 		}
-		out = append(out, rec)
+		timestamps = append(timestamps, ts)
 	}
 
 	if rows.Err() != nil {
-		return nil, fmt.Errorf("iterate all readings: %w", rows.Err())
+		return nil, fmt.Errorf("iterate push timestamps: %w", rows.Err())
 	}
 
-	return out, nil
+	return timestamps, nil
 }
 
 func allowedNumericFilters(sensorType string) map[string]bool {

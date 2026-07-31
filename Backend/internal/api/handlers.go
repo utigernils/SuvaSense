@@ -177,6 +177,7 @@ func (h *Handler) ListAllReadings(w http.ResponseWriter, r *http.Request) {
 		"serial_number": serial,
 		"page":          filter.Page,
 		"page_size":     filter.PageSize,
+		"mode":          "push-bundles",
 		"items":         readings,
 	}
 	if sensorType != nil {

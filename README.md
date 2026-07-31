@@ -134,6 +134,8 @@ Base URL: `http://localhost:8080/api/v1`
 - `GET /sensors/{serial}/readings/{sensorType}`
 - `GET /sensors/{serial}/readings/{sensorType}/latest`
 
+`GET /sensors/{serial}/readings` returns consolidated publish bundles (one item per MQTT data push) with all sensor types included in each item.
+
 Valid `sensorType` values: `bme680`, `mpu6050`, `veml7700`, `system`.
 
 For detailed backend endpoint docs and filter examples, see [Backend/README.md](Backend/README.md).
