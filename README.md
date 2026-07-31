@@ -81,6 +81,65 @@ suva/<serial>/data
 
 ---
 
+## Backend (MQTT -> Postgres API)
+
+The repository includes a Go backend that subscribes to MQTT messages from devices, writes readings to Postgres, and exposes unprotected REST endpoints for querying sensor data.
+
+### What It Does
+
+- Subscribes to MQTT topic pattern (`MQTT_TOPIC`, default `suva/+/data`)
+- Creates/updates sensors by serial number
+- Stores readings in Postgres (`sensors` and `readings` tables)
+- Auto-applies `Backend/schema.sql` on startup if required tables are missing
+- Exposes HTTP API on port `8080`
+
+### Setup (Docker Compose)
+
+From repository root:
+
+1. Create backend env file:
+
+```bash
+cp Backend/.env.example Backend/.env
+```
+
+2. Ensure these values are correct for Docker network usage:
+
+```env
+DATABASE_URL=postgres://suvasense:suvasense_secret@postgres:5432/suvasense?sslmode=disable
+MQTT_BROKER_URL=tcp://mosquitto:1883
+MQTT_TOPIC=suva/+/data
+```
+
+3. Start stack:
+
+```bash
+docker compose up -d --build
+```
+
+4. Verify backend:
+
+```bash
+curl http://localhost:8080/health
+```
+
+### API Entry Points
+
+Base URL: `http://localhost:8080/api/v1`
+
+- `GET /sensors`
+- `GET /sensors/{serial}`
+- `GET /sensors/{serial}/latest`
+- `GET /sensors/{serial}/readings`
+- `GET /sensors/{serial}/readings/{sensorType}`
+- `GET /sensors/{serial}/readings/{sensorType}/latest`
+
+Valid `sensorType` values: `bme680`, `mpu6050`, `veml7700`, `system`.
+
+For detailed backend endpoint docs and filter examples, see [Backend/README.md](Backend/README.md).
+
+---
+
 ## Serial Commands
 
 All commands are JSON lines sent at 115200 baud. `target` and `value` are optional depending on the command.
@@ -253,6 +312,17 @@ Each sensor object is only included if the sensor is enabled and initialized suc
 
 ```
 SuvaSense/
+├── docker-compose.yml       # Mosquitto, Postgres, pgAdmin, backend
+├── mosquitto.conf           # MQTT broker configuration
+├── Backend/                 # Go ingestion + API service
+│   ├── main.go
+│   ├── schema.sql
+│   └── internal/
+│       ├── api/
+│       ├── config/
+│       ├── db/
+│       ├── ingest/
+│       └── store/
 ├── CAD/                  # 3D-printable case files (.3mf)
 ├── Firmware/
 │   └── SuvaSense_Firmware/   # Arduino/PlatformIO firmware
@@ -261,7 +331,8 @@ SuvaSense/
 │       ├── SuvaSense_Firmware.ino  # Main sketch
 │       ├── SERIAL_PROTOCOL.md       # Full serial protocol reference
 │       └── ARCHITECTURE.md          # Naming conventions
-└── PCB/                  # Gerber files and PCB documentation
+├── PCB/                  # Gerber files and PCB documentation
+└── Utility/              # Local desktop/web utility app
 ```
 
 ## License
