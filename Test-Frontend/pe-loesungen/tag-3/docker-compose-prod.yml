@@ -1,0 +1,239 @@
+# Tag 3 Referenz – docker-compose.yml (mit Kommentaren)
+
+Vollständige `docker-compose.yml` für den SuvaSense-Stack. Mit
+Kommentaren, die erklären, **warum** jede Einstellung so ist.
+
+## Datei: `SuvaSense/docker-compose.yml`
+
+```yaml
+# ============================================================
+# SuvaSense Platform – Docker Compose
+# ============================================================
+#
+# Startet 4 Services auf einer Debian-Box:
+#   - backend    (Go, REST-API + MQTT-Subscriber)
+#   - mosquitto  (MQTT-Broker, Port 1883)
+#   - postgres   (PostgreSQL-Datenbank)
+#   - pgadmin    (Web-UI für Postgres, Port 5050)
+#
+# Start:   docker compose up -d
+# Stop:    docker compose down
+# Logs:    docker compose logs -f <service>
+# Status:  docker compose ps
+# ============================================================
+
+services:
+
+  # --------------------------------------------------------
+  # Backend (Go-Service)
+  # --------------------------------------------------------
+  # REST-API unter :8080, subscribt MQTT unter suva/+/data
+  # Persistiert Messages in Postgres
+  backend:
+    # Lokales Image, gebaut aus Backend/Dockerfile
+    build:
+      context: ./Backend
+    # Oder: Image aus Registry pullen
+    # image: ghcr.io/heiligerg/suvasense-backend:latest
+
+    # Restart-Policy: bei Crash neu starten
+    restart: unless-stopped
+
+    # Host-Port 8080 -> Container-Port 8080
+    ports:
+      - "8080:8080"
+
+    # Umgebungsvariablen
+    environment:
+      # Postgres-Verbindung (Hostname = Service-Name 'postgres')
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=suvasense
+      - POSTGRES_USER=suvasense
+      # Passwort aus .env-Datei (NICHT hier im Klartext!)
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+      # MQTT-Verbindung
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+
+      # Logging-Level
+      - LOG_LEVEL=info
+
+    # Auf postgres warten (depends_on mit healthcheck)
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+
+    # Im selben Netz (default)
+    networks:
+      - suvasense
+
+  # --------------------------------------------------------
+  # Mosquitto (MQTT-Broker)
+  # --------------------------------------------------------
+  mosquitto:
+    image: eclipse-mosquitto:2
+
+    restart: unless-stopped
+
+    ports:
+      - "1883:1883"   # MQTT (TCP)
+      - "9001:9001"   # MQTT (WebSocket, optional)
+
+    volumes:
+      # Persistenz der Messages (überlebt Container-Restart)
+      - mosquitto_data:/mosquitto/data
+      # Eigene Config (im Host-Filesystem)
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+    networks:
+      - suvasense
+
+  # --------------------------------------------------------
+  # PostgreSQL
+  # --------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+
+    restart: unless-stopped
+
+    # KEIN Host-Port-Mapping! Nur intern erreichbar.
+    # pgAdmin geht über das Docker-Netz.
+
+    environment:
+      - POSTGRES_DB=suvasense
+      - POSTGRES_USER=suvasense
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Optional: Init-Skripte beim ersten Start
+      # - ./Backend/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+    # Healthcheck: ist Postgres bereit für Connections?
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U suvasense -d suvasense"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - suvasense
+
+  # --------------------------------------------------------
+  # pgAdmin (Web-UI für Postgres)
+  # --------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+
+    restart: unless-stopped
+
+    ports:
+      - "5050:80"   # Web-UI unter http://localhost:5050
+
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@local}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+
+    # Auf postgres warten
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - suvasense
+
+# ============================================================
+# Volumes (persistent)
+# ============================================================
+# Werden in /var/lib/docker/volumes/ gespeichert.
+# Mit 'docker volume ls' sichtbar.
+# Mit 'docker compose down --volumes' werden sie GELOESCHT.
+volumes:
+  mosquitto_data:
+  postgres_data:
+
+# ============================================================
+# Netzwerk
+# ============================================================
+# Default: bridge. Service-Namen sind DNS-Namen.
+# Container koennen sich gegenseitig per Service-Name erreichen.
+networks:
+  suvasense:
+    driver: bridge
+```
+
+## Datei: `SuvaSense/.env`
+
+```bash
+# Postgres-Passwort (vom Trainer generiert)
+POSTGRES_PASSWORD=<sicheres-passwort-hier>
+
+# pgAdmin-Login
+PGADMIN_EMAIL=admin@local
+PGADMIN_PASSWORD=<anderes-passwort-hier>
+```
+
+!!! warning "Sicherheit"
+    Die `.env` darf **niemals** in Git committed werden. Sie
+    enthält Passwörter. Die `.gitignore` muss `*.env` enthalten.
+
+## Start-Sequenz
+
+```bash
+# 1. .env anlegen (einmalig)
+nano .env
+# Werte eintragen, speichern
+
+# 2. Stack starten
+docker compose up -d --build
+
+# 3. Warten, bis alle Services 'healthy' sind
+docker compose ps
+# Alle 4 Services zeigen 'running' (oder 'healthy' für postgres)
+
+# 4. Backend testen
+curl http://localhost:8080/health
+# Sollte 200 OK zurückgeben
+
+# 5. pgAdmin im Browser öffnen
+# http://localhost:5050
+# Login mit PGADMIN_EMAIL und PGADMIN_PASSWORD
+```
+
+## Volume-Backup (wichtig!)
+
+```bash
+# Postgres-Volume backup
+docker run --rm \
+  -v suvasense_postgres_data:/data \
+  -v $(pwd):/backup \
+  alpine tar cvf /backup/postgres-volume-$(date +%Y%m%d).tar /data
+
+# Mosquitto-Volume backup (Persistenz-File)
+docker run --rm \
+  -v suvasense_mosquitto_data:/data \
+  -v $(pwd):/backup \
+  alpine tar cvf /backup/mosquitto-volume-$(date +%Y%m%d).tar /data
+```
+
+## Häufige Fehler
+
+| Fehler | Ursache | Lösung |
+|---|---|---|
+| `Error: pool max clients` | Backend öffnet zu viele DB-Connections | `MAX_OPEN_CONNS` in backend-config senken |
+| `pg_isready: connection refused` | Postgres noch nicht ready | Warten, Healthcheck abwarten |
+| Backend startet, aber REST gibt 502 | Backend kann Postgres nicht erreichen | `docker compose exec backend ping postgres` |
+| `network suvasense not found` | docker-compose.yml hat Tippfehler | `docker compose config` zeigt die geparste Config |
+| `volume "suvasense_postgres_data" not found` | `docker compose up` zum ersten Mal noch nicht gelaufen | Erst `up` ohne `-d` machen, Volumes werden erstellt |
+
+## Siehe auch
+
+- [schema.sql](schema.sql) – Datenbank-Schema
+- [backend-config.md](backend-config.md) – Backend-Env-Variables
+- [NOTIZEN.md](NOTIZEN.md) – Design-Entscheidungen

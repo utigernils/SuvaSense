@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raumklima Monitor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Raumklima Monitor</h1>
+    </header>
+
+    <main>
+        <section class="dashboard">
+            <!-- Sensor-Karte -->
+            <div class="card">
+                <h2 id="serial-number">Sensor SN12345</h2>
+                <div class="values">
+                    <div class="value-item">
+                        <span class="label">Temperatur</span>
+                        <span class="number" id="temp-c">23.4 °C</span>
+                    </div>
+                    <div class="value-item">
+                        <span class="label">Luftfeuchtigkeit</span>
+                        <span class="number" id="hum-pct">51 %</span>
+                    </div>
+                </div>
+                <div class="status gut" id="status">Gut</div>
+            </div>
+
+            <!-- Verlauf -->
+            <section class="history">
+                <h3>Verlauf der letzten Messungen</h3>
+                <div class="history-list" id="history-list">
+                    <p class="placeholder">Lade Daten...</p>
+                </div>
+            </section>
+
+            <!-- Admin-Panel (Tag 3) -->
+            <section class="admin-panel">
+                <details>
+                    <summary>Einstellungen</summary>
+                    <div class="admin-content">
+                        <label>
+                            Sensor:
+                            <select id="sensor-select" onchange="onSensorChange()">
+                                <option value="SN12345">SN12345</option>
+                                <option value="SN67890">SN67890</option>
+                                <option value="DEMO-001">DEMO-001</option>
+                            </select>
+                        </label>
+                        <button onclick="loadDashboard()">Aktualisieren</button>
+                    </div>
+                </details>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <p>Raumklima Bootcamp &copy; 2026</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

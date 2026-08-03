@@ -1,0 +1,251 @@
+/* ============================================================
+   AE Raumklima Bootcamp – App Stylesheet
+   Tag 1: Grundlayout + Dashboard
+   Tag 2: Verlaufsliste
+   Tag 3: Admin-Panel
+   ============================================================ */
+
+/* Grundlayout */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f5f7f7;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background: #00695c;
+    color: white;
+    padding: 16px 24px;
+}
+
+header h1 {
+    font-size: 22px;
+}
+
+main {
+    flex: 1;
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Karte */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.card h2 {
+    color: #00695c;
+    margin-bottom: 16px;
+    font-size: 20px;
+    border-bottom: 2px solid #e0f2f1;
+    padding-bottom: 8px;
+}
+
+.values {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.value-item {
+    background: #f8fafa;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.label {
+    display: block;
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.number {
+    display: block;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Status */
+.status {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+}
+
+.gut {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.kritisch {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+}
+
+.schlecht {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+/* Verlauf (Tag 2) */
+.history {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.history h3 {
+    color: #00695c;
+    margin-bottom: 12px;
+}
+
+.placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    background: #fafafa;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.history-time {
+    color: #999;
+    font-size: 13px;
+    min-width: 50px;
+}
+
+.history-temp {
+    font-weight: bold;
+    min-width: 50px;
+}
+
+.history-hum {
+    color: #666;
+    min-width: 40px;
+}
+
+.history-status {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.history-status.gut {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.history-status.kritisch {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.history-status.schlecht {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Admin-Panel (Tag 3) */
+.admin-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.admin-panel summary {
+    font-weight: bold;
+    color: #00695c;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.admin-content {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.admin-content select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.admin-content button {
+    padding: 6px 16px;
+    background: #00695c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.admin-content button:hover {
+    background: #004d40;
+}
+
+/* Footer */
+footer {
+    background: #00695c;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .values {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
