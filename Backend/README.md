@@ -16,6 +16,8 @@ Use Docker Compose from the repository root.
 - MQTT_BROKER_URL=tcp://mosquitto:1883
 - MQTT_TOPIC=suva/+/data
 
+Docker Compose also mounts this file into the backend container at /app/.env so the application can read the .env file directly at runtime.
+
 3. Start all services:
 
    docker compose up --build
@@ -23,6 +25,12 @@ Use Docker Compose from the repository root.
 4. API base URL:
 
    http://localhost:8080/api/v1
+
+## Docker Image Runtime Env
+
+When running the image directly, pass your env file with --env-file:
+
+docker run --rm -p 8080:8080 --env-file Backend/.env ghcr.io/<owner>/suvasense-backend:latest
 
 ## Schema Bootstrap
 
@@ -67,19 +75,19 @@ This returns items in the same structured format as latest, but paginated and fi
 Examples:
 
 - Latest only:
-   - GET /api/v1/sensors/SN12345/readings/bme680/latest
+  - GET /api/v1/sensors/SN12345/readings/bme680/latest
 - All BME680 readings, newest first:
-   - GET /api/v1/sensors/SN12345/readings/bme680?page=1&page_size=100
+  - GET /api/v1/sensors/SN12345/readings/bme680?page=1&page_size=100
 - All readings (mixed sensor types), newest first:
-   - GET /api/v1/sensors/SN12345/readings?page=1&page_size=100
+  - GET /api/v1/sensors/SN12345/readings?page=1&page_size=100
 - All readings, but only one sensor type via query filter:
-   - GET /api/v1/sensors/SN12345/readings?sensor_type=bme680&page=1&page_size=100
+  - GET /api/v1/sensors/SN12345/readings?sensor_type=bme680&page=1&page_size=100
 - Time-window filtered:
-   - GET /api/v1/sensors/SN12345/readings/bme680?from=2026-07-31T00:00:00Z&to=2026-07-31T23:59:59Z
+  - GET /api/v1/sensors/SN12345/readings/bme680?from=2026-07-31T00:00:00Z&to=2026-07-31T23:59:59Z
 - Numeric filter (temperature range):
-   - GET /api/v1/sensors/SN12345/readings/bme680?temp_c_min=20&temp_c_max=30
+  - GET /api/v1/sensors/SN12345/readings/bme680?temp_c_min=20&temp_c_max=30
 - Numeric filter (RSSI on system telemetry):
-   - GET /api/v1/sensors/SN12345/readings/system?rssi_dbm_min=-75
+  - GET /api/v1/sensors/SN12345/readings/system?rssi_dbm_min=-75
 
 ## Filtering and Pagination
 

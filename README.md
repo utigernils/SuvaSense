@@ -5,18 +5,16 @@ Open-source ESP32 sensor board with MQTT firmware. Ships ready to flash — conn
 <img  height="500" alt="image" src="https://github.com/user-attachments/assets/40b9ed89-22ae-41ba-aef7-5fb9d85fac8c" />
 <img height="500" alt="image" src="https://github.com/user-attachments/assets/89e5c55e-4446-4952-9355-4b11f0464027" />
 
-
-
 ## Hardware
 
-| Component | Details |
-|---|---|
-| **MCU** | ESP32 |
-| **Temperature / Humidity / Pressure / Gas** | BME680 |
-| **Accelerometer / Gyroscope** | MPU6050 |
-| **Ambient Light** | VEML7700 |
-| **Status LEDs** | 2x WS2813 RGB (NeoPixel-compatible) |
-| **Connectivity** | 2.4 GHz WiFi, MQTT (publish-only) |
+| Component                                   | Details                             |
+| ------------------------------------------- | ----------------------------------- |
+| **MCU**                                     | ESP32                               |
+| **Temperature / Humidity / Pressure / Gas** | BME680                              |
+| **Accelerometer / Gyroscope**               | MPU6050                             |
+| **Ambient Light**                           | VEML7700                            |
+| **Status LEDs**                             | 2x WS2813 RGB (NeoPixel-compatible) |
+| **Connectivity**                            | 2.4 GHz WiFi, MQTT (publish-only)   |
 
 3D-printable case files are in [`CAD/`](CAD/). Gerber files for PCB fabrication are in [`PCB/`](PCB/).
 
@@ -117,6 +115,8 @@ MQTT_TOPIC=suva/+/data
 docker compose up -d --build
 ```
 
+The compose setup mounts Backend/.env into the backend container as /app/.env and also exports the variables, so the backend can read the .env file directly.
+
 4. Verify backend:
 
 ```bash
@@ -148,74 +148,76 @@ All commands are JSON lines sent at 115200 baud. `target` and `value` are option
 
 ### Any time (5s boot window)
 
-| Command | What it does |
-|---|---|
+| Command                   | What it does             |
+| ------------------------- | ------------------------ |
 | `{"action":"bootloader"}` | Enter configuration mode |
 
 ### Bootloader (configuration mode)
 
-| Command | What it does |
-|---|---|
-| `{"action":"ping"}` | Health check — responds with `{"type":"pong"}` |
-| `{"action":"reboot"}` | Restart the ESP32 |
-| `{"action":"factory_reset"}` | Wipe all settings, keep serial number |
-| `{"action":"stream","target":"start"}` | Stream live sensor data to serial |
-| `{"action":"stream","target":"stop"}` | Stop streaming |
-| `{"action":"selftest","target":"bme680"}` | Run self-test on a sensor (see targets below) |
-| `{"action":"get","target":"ssid"}` | Read a setting |
-| `{"action":"set","target":"ssid","value":"MyWiFi"}` | Write a setting |
+| Command                                             | What it does                                   |
+| --------------------------------------------------- | ---------------------------------------------- |
+| `{"action":"ping"}`                                 | Health check — responds with `{"type":"pong"}` |
+| `{"action":"reboot"}`                               | Restart the ESP32                              |
+| `{"action":"factory_reset"}`                        | Wipe all settings, keep serial number          |
+| `{"action":"stream","target":"start"}`              | Stream live sensor data to serial              |
+| `{"action":"stream","target":"stop"}`               | Stop streaming                                 |
+| `{"action":"selftest","target":"bme680"}`           | Run self-test on a sensor (see targets below)  |
+| `{"action":"get","target":"ssid"}`                  | Read a setting                                 |
+| `{"action":"set","target":"ssid","value":"MyWiFi"}` | Write a setting                                |
 
 ### Runtime (normal operation)
 
-| Command | What it does |
-|---|---|
-| `{"action":"ping"}` | Health check |
+| Command               | What it does      |
+| --------------------- | ----------------- |
+| `{"action":"ping"}`   | Health check      |
 | `{"action":"reboot"}` | Restart the ESP32 |
 
 > To change settings at runtime: send `{"action":"reboot"}`, then `{"action":"bootloader"}` during the 5-second orange window.
 
 ### All Configurable Targets
 
-| Target | Type | Default | Description |
-|---|---|---|---|
-| `ssid` | string | — | WiFi network name |
-| `wifi_password` | string | — | WiFi password (masked in responses) |
-| `hostname` | string | `suva-<serial>` | DHCP hostname |
-| `broker` | string | — | MQTT broker IP or hostname |
-| `port` | number | `1883` | MQTT broker port |
-| `client_id` | string | serial number | MQTT client ID |
-| `mqtt_username` | string | — | MQTT username (optional) |
-| `mqtt_password` | string | — | MQTT password (masked, optional) |
-| `topic_prefix` | string | `suva/<serial>/` | MQTT topic prefix |
-| `keep_alive` | number | `60` | MQTT keepalive (seconds) |
-| `publish_interval` | number | `10000` | Sensor publish interval (ms) |
-| `mpu_en` | bool | `true` | Enable MPU6050 |
-| `veml_en` | bool | `true` | Enable VEML7700 |
-| `bme_en` | bool | `true` | Enable BME680 |
-| `sys_telem` | bool | `true` | Enable system telemetry |
-| `brightness` | number | `32` | LED brightness (0–255) |
-| `user_led` | bool | `true` | Enable user LED |
-| `sys_led` | bool | `true` | Enable system LED |
-| `boot_count` | number | — | Total boot count (read-only) |
-| `serial_num` | string | — | Device serial number (read-only) |
-| `factory_done` | bool | — | Factory done flag (read-only) |
+| Target             | Type   | Default          | Description                         |
+| ------------------ | ------ | ---------------- | ----------------------------------- |
+| `ssid`             | string | —                | WiFi network name                   |
+| `wifi_password`    | string | —                | WiFi password (masked in responses) |
+| `hostname`         | string | `suva-<serial>`  | DHCP hostname                       |
+| `broker`           | string | —                | MQTT broker IP or hostname          |
+| `port`             | number | `1883`           | MQTT broker port                    |
+| `client_id`        | string | serial number    | MQTT client ID                      |
+| `mqtt_username`    | string | —                | MQTT username (optional)            |
+| `mqtt_password`    | string | —                | MQTT password (masked, optional)    |
+| `topic_prefix`     | string | `suva/<serial>/` | MQTT topic prefix                   |
+| `keep_alive`       | number | `60`             | MQTT keepalive (seconds)            |
+| `publish_interval` | number | `10000`          | Sensor publish interval (ms)        |
+| `mpu_en`           | bool   | `true`           | Enable MPU6050                      |
+| `veml_en`          | bool   | `true`           | Enable VEML7700                     |
+| `bme_en`           | bool   | `true`           | Enable BME680                       |
+| `sys_telem`        | bool   | `true`           | Enable system telemetry             |
+| `brightness`       | number | `32`             | LED brightness (0–255)              |
+| `user_led`         | bool   | `true`           | Enable user LED                     |
+| `sys_led`          | bool   | `true`           | Enable system LED                   |
+| `boot_count`       | number | —                | Total boot count (read-only)        |
+| `serial_num`       | string | —                | Device serial number (read-only)    |
+| `factory_done`     | bool   | —                | Factory done flag (read-only)       |
 
 Booleans accept `"true"` / `"false"` or `"1"` / `"0"`.
 
 ### Selftest Targets
 
-| Target | Aliases | What it tests |
-|---|---|---|
-| `bme680` | `bme` | I2C probe, read temperature/humidity/pressure |
-| `mpu6050` | `mpu` | I2C probe, read accelerometer/gyroscope |
-| `veml7700` | `veml` | I2C probe, read lux/white values |
-| `esp32` | `system` | Heap, flash, CPU temperature, MAC address |
-| `led` | — | LED strip flash test |
+| Target     | Aliases  | What it tests                                 |
+| ---------- | -------- | --------------------------------------------- |
+| `bme680`   | `bme`    | I2C probe, read temperature/humidity/pressure |
+| `mpu6050`  | `mpu`    | I2C probe, read accelerometer/gyroscope       |
+| `veml7700` | `veml`   | I2C probe, read lux/white values              |
+| `esp32`    | `system` | Heap, flash, CPU temperature, MAC address     |
+| `led`      | —        | LED strip flash test                          |
 
 Example:
+
 ```
 {"action":"selftest","target":"bme680"}
 ```
+
 The device immediately responds with `Selftest triggered` and then with the result containing `ok`, sensor name, and message/error details.
 
 ---
@@ -224,31 +226,31 @@ The device immediately responds with `Selftest triggered` and then with the resu
 
 The board has two WS2813 RGB LEDs:
 
-| LED | Role | Location |
-|---|---|---|
-| **System LED (LED 0)** | Device state indicator | Left side |
-| **User LED (LED 1)** | Connection & activity | Right side |
+| LED                    | Role                   | Location   |
+| ---------------------- | ---------------------- | ---------- |
+| **System LED (LED 0)** | Device state indicator | Left side  |
+| **User LED (LED 1)**   | Connection & activity  | Right side |
 
 ### System LED — State Patterns
 
-| Color | State | Meaning |
-|---|---|---|
-| Red | Factory | First boot — waiting for serial number |
-| Orange (fast pulse, 0.2 s) | Boot window | 5-second hook window after boot |
-| Orange | Bootloader | Configuration mode active |
-| Cyan (solid) | Runtime init | Runtime is starting services/sensors |
-| Green | Runtime | Normal operation, publishing data |
+| Color                      | State        | Meaning                                |
+| -------------------------- | ------------ | -------------------------------------- |
+| Red                        | Factory      | First boot — waiting for serial number |
+| Orange (fast pulse, 0.2 s) | Boot window  | 5-second hook window after boot        |
+| Orange                     | Bootloader   | Configuration mode active              |
+| Cyan (solid)               | Runtime init | Runtime is starting services/sensors   |
+| Green                      | Runtime      | Normal operation, publishing data      |
 
 ### User LED — Event Indicators
 
-| Color | Pattern | Meaning |
-|---|---|---|
-| Blue flash (4x) | MQTT connected | Successfully connected to broker |
-| Orange flash (4x) | MQTT disconnected | Lost connection to broker |
-| Green flash (4x) | WiFi connected | Successfully joined network |
-| Red flash (4x) | WiFi disconnected | Lost WiFi connection |
-| Yellow blink | Publishing data | Sensor payload sent to MQTT |
-| Solid blue | Streaming mode | Live sensor data being sent to serial |
+| Color             | Pattern           | Meaning                               |
+| ----------------- | ----------------- | ------------------------------------- |
+| Blue flash (4x)   | MQTT connected    | Successfully connected to broker      |
+| Orange flash (4x) | MQTT disconnected | Lost connection to broker             |
+| Green flash (4x)  | WiFi connected    | Successfully joined network           |
+| Red flash (4x)    | WiFi disconnected | Lost WiFi connection                  |
+| Yellow blink      | Publishing data   | Sensor payload sent to MQTT           |
+| Solid blue        | Streaming mode    | Live sensor data being sent to serial |
 
 ### Boot Window
 
@@ -269,9 +271,9 @@ Each sensor object is only included if the sensor is enabled and initialized suc
 ```json
 {
   "mpu6050": {
-    "acc":  {"x": 0.12, "y": -0.03, "z": 9.81},
-    "gyro": {"x": 0.1,  "y": 0.2,   "z": -0.1},
-    "ang":  {"x": 1.5,  "y": -0.8,  "z": 0.3}
+    "acc": { "x": 0.12, "y": -0.03, "z": 9.81 },
+    "gyro": { "x": 0.1, "y": 0.2, "z": -0.1 },
+    "ang": { "x": 1.5, "y": -0.8, "z": 0.3 }
   },
   "veml7700": {
     "lux": 245.3,
@@ -292,21 +294,21 @@ Each sensor object is only included if the sensor is enabled and initialized suc
 }
 ```
 
-| Field | Unit | Notes |
-|---|---|---|
-| `mpu6050.acc` | m/s² | Accelerometer (x, y, z) |
-| `mpu6050.gyro` | °/s | Gyroscope (x, y, z) |
-| `mpu6050.ang` | ° | Calculated angle (x, y, z) |
-| `veml7700.lux` | lx | Ambient light |
-| `veml7700.white` | raw | White channel raw value |
-| `bme680.temp` | °C | Temperature |
-| `bme680.hum` | % | Relative humidity |
-| `bme680.press` | hPa | Barometric pressure |
-| `bme680.gas` | kΩ | Gas resistance |
-| `system.uptime` | seconds | Millis since boot (÷1000) |
-| `system.cpu_temp` | °C | ESP32 internal temperature |
-| `system.free_heap` | bytes | Available RAM |
-| `system.rssi` | dBm | WiFi signal strength (only when connected) |
+| Field              | Unit    | Notes                                      |
+| ------------------ | ------- | ------------------------------------------ |
+| `mpu6050.acc`      | m/s²    | Accelerometer (x, y, z)                    |
+| `mpu6050.gyro`     | °/s     | Gyroscope (x, y, z)                        |
+| `mpu6050.ang`      | °       | Calculated angle (x, y, z)                 |
+| `veml7700.lux`     | lx      | Ambient light                              |
+| `veml7700.white`   | raw     | White channel raw value                    |
+| `bme680.temp`      | °C      | Temperature                                |
+| `bme680.hum`       | %       | Relative humidity                          |
+| `bme680.press`     | hPa     | Barometric pressure                        |
+| `bme680.gas`       | kΩ      | Gas resistance                             |
+| `system.uptime`    | seconds | Millis since boot (÷1000)                  |
+| `system.cpu_temp`  | °C      | ESP32 internal temperature                 |
+| `system.free_heap` | bytes   | Available RAM                              |
+| `system.rssi`      | dBm     | WiFi signal strength (only when connected) |
 
 ---
 
