@@ -36,16 +36,28 @@ Lernenden-Abkürzung. Wenn ein Lernender fragt "Wie geht das?":
 
 ```
 loesungen/
-├── tag-1/                # Dashboard Grundlayout
-│   ├── index.html        # komplette HTML-Referenz
-│   ├── style.css         # komplettes CSS mit Status-Farben
-│   └── NOTIZEN.md        # Design-Entscheidungen + Alternativen
-├── tag-2/                # Statuslogik + Daten laden
-│   ├── data.json         # 10 Push-Bundles
-│   ├── script.js         # komplette Statuslogik + Verlauf
+├── tag-1/                  # Dashboard Grundlayout
+│   ├── index.html          # komplette HTML-Referenz
+│   ├── style.css           # komplettes CSS mit Status-Farben
+│   ├── script.js           # leer (Tag 1: nur Layout, keine Logik)
+│   └── NOTIZEN.md          # Design-Entscheidungen + Alternativen
+├── tag-2/                  # Statuslogik + Daten laden
+│   ├── data.json           # 10 Push-Bundles
+│   ├── index.html
+│   ├── style.css
+│   ├── script.js           # Statuslogik + fetch + Verlauf
 │   └── NOTIZEN.md
-└── tag-3/                # Snapshot-Fallback-Strategie
-    ├── script.js         # getBundles / getLatestBundle / etc.
+├── tag-3/                  # Snapshot-Fallback-Strategie
+│   ├── data.json
+│   ├── index.html          # mit Admin-Panel (sensor-select)
+│   ├── style.css
+│   ├── script.js           # API → localStorage → Seed (3 Stufen)
+│   └── NOTIZEN.md
+└── tag-4/                  # Stresstest, Demo, Backup (kein Code)
+    ├── README.md           # Übersicht + Reihenfolge
+    ├── stresstest-commands.md   # alle Stresstest-Befehle
+    ├── demo-skript.md       # 5-7 Min Demo-Skript
+    ├── backup-pflicht-skript.md # pg_dump + Snapshot
     └── NOTIZEN.md
 ```
 
