@@ -1,0 +1,22 @@
+[
+  { "recorded_at": "2026-08-06T10:30:00Z",
+    "readings": { "bme680": { "temp_c": 23.4, "hum_pct": 51 } } },
+  { "recorded_at": "2026-08-06T10:15:00Z",
+    "readings": { "bme680": { "temp_c": 23.6, "hum_pct": 50 } } },
+  { "recorded_at": "2026-08-06T10:00:00Z",
+    "readings": { "bme680": { "temp_c": 23.2, "hum_pct": 52 } } },
+  { "recorded_at": "2026-08-06T09:45:00Z",
+    "readings": { "bme680": { "temp_c": 23.8, "hum_pct": 49 } } },
+  { "recorded_at": "2026-08-06T09:30:00Z",
+    "readings": { "bme680": { "temp_c": 24.1, "hum_pct": 47 } } },
+  { "recorded_at": "2026-08-06T09:15:00Z",
+    "readings": { "bme680": { "temp_c": 25.2, "hum_pct": 43 } } },
+  { "recorded_at": "2026-08-06T09:00:00Z",
+    "readings": { "bme680": { "temp_c": 26.0, "hum_pct": 40 } } },
+  { "recorded_at": "2026-08-06T08:45:00Z",
+    "readings": { "bme680": { "temp_c": 19.5, "hum_pct": 63 } } },
+  { "recorded_at": "2026-08-06T08:30:00Z",
+    "readings": { "bme680": { "temp_c": 18.2, "hum_pct": 68 } } },
+  { "recorded_at": "2026-08-06T08:15:00Z",
+    "readings": { "bme680": { "temp_c": 30.0, "hum_pct": 25 } } }
+]
