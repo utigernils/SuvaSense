@@ -10,9 +10,11 @@
 // ============================================================
 
 // Konfiguration – zeigt auf das ECHTE SuvaSense-Backend
-// (im Docker-Container, hört auf 8080). Für Test-Server
-// (Port 8090) die URL austauschen.
-const API_BASE = 'http://localhost:8080/api/v1';
+// im Docker-Container (hört auf 8080). Wenn der Live-Server
+// auf einer anderen Maschine läuft (z.B. 192.168.1.186),
+// muss die IP angepasst werden, NICHT 'localhost'.
+// Für Test-Server (Port 8090) die URL austauschen.
+const API_BASE = 'http://192.168.1.186:8080/api/v1';
 let currentSerial = '7208r_0001';
 
 function snapshotKey(serial) {
