@@ -9,10 +9,13 @@
 // (siehe docs/projekt/api-vertrag.md)
 // ============================================================
 
-// Konfiguration – lokal zeigt der Test-Server auf Port 8090.
-// Für das echte SuvaSense-Backend: API_BASE austauschen.
-const API_BASE = 'http://localhost:8090/api/v1';
-let currentSerial = 'SN12345';
+// Konfiguration – zeigt auf das ECHTE SuvaSense-Backend
+// im Docker-Container (hört auf 8080). Wenn der Live-Server
+// auf einer anderen Maschine läuft (z.B. 192.168.1.186),
+// muss die IP angepasst werden, NICHT 'localhost'.
+// Für Test-Server (Port 8090) die URL austauschen.
+const API_BASE = 'http://192.168.1.186:8080/api/v1';
+let currentSerial = '7208r_0001';
 
 function snapshotKey(serial) {
   return `snapshot:${serial}`;
@@ -21,14 +24,23 @@ function snapshotKey(serial) {
 // ---------- Tag 2: Statuslogik ----------
 
 function getStatus(tempC, humPct) {
-  const tempOk = tempC >= 20 && tempC <= 24;
-  const humOk  = humPct >= 40 && humPct <= 60;
-  const tempWarn = tempC >= 18 && tempC <= 26;
-  const humWarn  = humPct >= 30 && humPct <= 70;
+const tempOk = tempC >= 20 && tempC <= 22;
+const humOk  = humPct >= 40 && humPct <= 60;
 
-  if (tempOk && humOk) return 'gut';
-  if (tempWarn || humWarn) return 'kritisch';
-  return 'schlecht';
+const tempWarn =
+  (tempC >= 18 && tempC < 20) ||
+  (tempC > 22 && tempC <= 26);
+
+const humWarn =
+  (humPct >= 30 && humPct < 40) ||
+  (humPct > 60 && humPct <= 65);
+
+const tempBad = tempC < 18 || tempC >= 27;
+const humBad  = humPct < 30 || humPct > 65;
+
+if (tempBad || humBad) return 'schlecht';
+if (tempOk && humOk) return 'gut';
+return 'kritisch';
 }
 
 function getStatusText(status) {
