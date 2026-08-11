@@ -71,6 +71,8 @@ async function getBundles(serial, limit = 10) {
     return items;
   } catch (error) {
     console.warn('API nicht erreichbar, nutze Snapshot:', error);
+    // Toast SOFORT anzeigen (auch wenn Fallback funktioniert)
+    showApiErrorToast();
   }
 
   // 2. Versuch: Snapshot aus localStorage
@@ -131,6 +133,53 @@ function renderHistory(bundles) {
 
 // ---------- Tag 2: Fehlerbehandlung ----------
 
+// Schlanker Toast (kein CSS, keine Dependencies):
+// - Wird beim ersten API-Fehler eingeblendet
+// - Verschwindet nach 8s automatisch ODER via Close-Button
+// - Inline-Styles, damit es ohne style.css funktioniert
+function showApiErrorToast() {
+  // Doppelte Toasts vermeiden
+  if (document.getElementById('api-error-toast')) return;
+
+  const toast = document.createElement('div');
+  toast.id = 'api-error-toast';
+  toast.setAttribute('role', 'alert');
+  toast.style.cssText = [
+    'position:fixed',
+    'bottom:24px',
+    'right:24px',
+    'max-width:360px',
+    'padding:14px 18px',
+    'background:#c62828',
+    'color:#fff',
+    'border-radius:8px',
+    'box-shadow:0 4px 16px rgba(0,0,0,0.25)',
+    'font-family:inherit',
+    'font-size:14px',
+    'line-height:1.4',
+    'z-index:9999',
+    'display:flex',
+    'align-items:flex-start',
+    'gap:10px',
+  ].join(';');
+
+  toast.innerHTML = `
+    <div style="flex:1">
+      <strong style="display:block;margin-bottom:2px">API nicht connected</strong>
+      <span style="opacity:0.95">Verwende Fallback-Daten</span>
+    </div>
+    <button type="button" aria-label="Schliessen"
+      style="background:transparent;border:0;color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0 4px;margin-left:4px">&times;</button>
+  `;
+
+  // Close-Button
+  toast.querySelector('button').addEventListener('click', () => toast.remove());
+  // Auto-Dismiss nach 8s
+  setTimeout(() => toast.remove(), 8000);
+
+  document.body.appendChild(toast);
+}
+
 function showError() {
   document.getElementById('serial-number').textContent = 'Keine Daten';
   document.getElementById('temp-c').textContent        = '-- °C';
@@ -142,6 +191,9 @@ function showError() {
 
   document.getElementById('history-list').innerHTML =
     '<p class="placeholder">Daten konnten nicht geladen werden.</p>';
+
+  // Toast: API nicht erreichbar, Fallback aktiv
+  showApiErrorToast();
 }
 
 // ---------- Tag 3: Sensor-Auswahl ----------
